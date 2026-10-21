@@ -1,9 +1,9 @@
 """Recipe + Ingredient + Plan + Grocery API-Routen (Postgres-persistent)."""
-from datetime import datetime, date, UTC
+from datetime import date
 from uuid import UUID
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -12,13 +12,14 @@ from app.schemas.api import (
     RecipeCreate, RecipeOut, IngredientCreate, IngredientOut,
     MonthlyPlanCreate, MonthlyPlanOut,
     GroceryListOut, GroceryItemOut,
+    WeeklyPlanOut, MealSlotOut,
 )
 from app.repositories.ingredient import IngredientRepository
 from app.repositories.recipe import RecipeRepository
-from app.repositories.plan import MonthlyPlanRepository
-from app.repositories.grocery import GroceryListRepository
-from app.services.plan_generator import GeneratorConfig, generate_monthly_plan
-from app.services.grocery_engine import build_grocery_list
+from app.repositories.plan import MonthlyPlanRepository, WeeklyPlanRepository
+from app.repositories.grocery import GroceryListRepository, GroceryItemRepository
+from app.services.plan_generator import GeneratorConfig, generate_and_persist_monthly_plan, weeks_in_month
+from app.services.grocery_engine import generate_and_persist_grocery_list
 
 router = APIRouter(tags=["family"], dependencies=[Depends(get_current_user_id)])
 
@@ -154,7 +155,7 @@ async def generate_plan(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Generiert einen Monatsplan basierend auf vorhandenen Rezepten."""
+    """Generiert einen Monatsplan basierend auf vorhandenen Rezepten und persistiert ihn."""
     recipe_repo = RecipeRepository(db)
     all_recipes = await recipe_repo.get_all()
     recipe_ids = [r.id for r in all_recipes]
@@ -171,70 +172,288 @@ async def generate_plan(
         meals_per_week=5,
         focus_tags=body.focus_tags,
     )
-    plan = generate_monthly_plan(config)
 
-    # Monatsplan in DB persistieren
+    monthly = await generate_and_persist_monthly_plan(config, db)
+    await db.commit()
+
+    # Weekly-Pläne mit Slots laden für die Response
     plan_repo = MonthlyPlanRepository(db)
-    monthly = await plan_repo.create(
-        household_id=UUID(user_id),
-        month=body.month,
-        year=body.year,
-        status="draft",
-        focus_tags=body.focus_tags or [],
-        generated_at=datetime.now(UTC),
-    )
+    monthly_full = await plan_repo.get_with_weekly(monthly.id)
+
+    weeks_data = []
+    total_slots = 0
+    if monthly_full:
+        for wp in monthly_full.weekly_plans:
+            slot_count = len(wp.meal_slots) if wp.meal_slots else 0
+            total_slots += slot_count
+            weeks_data.append({
+                "week_number": wp.week_number,
+                "start_date": str(wp.start_date) if wp.start_date else None,
+                "slots": slot_count,
+            })
 
     return {
         "plan_id": str(monthly.id),
         "month": body.month,
         "year": body.year,
-        "weeks": len(plan["weeks"]),
-        "meal_slots_total": sum(len(w["meal_slots"]) for w in plan["weeks"]),
+        "weeks": len(weeks_data),
+        "meal_slots_total": total_slots,
+        "weekly_plans": weeks_data,
     }
+
+
+@router.get("/plans", response_model=list[MonthlyPlanOut])
+async def list_plans(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Listet alle Monatspläne des Users."""
+    repo = MonthlyPlanRepository(db)
+    plans = await repo.get_all(
+        repo.model_class.household_id == UUID(user_id),
+        order_by=repo.model_class.year.desc(),
+    )
+    return [
+        MonthlyPlanOut(
+            id=p.id,
+            household_id=p.household_id,
+            month=p.month,
+            year=p.year,
+            status=p.status,
+            focus_tags=p.focus_tags or [],
+            generated_at=p.generated_at,
+            notes=p.notes,
+        )
+        for p in plans
+    ]
+
+
+@router.get("/plans/{plan_id}", response_model=MonthlyPlanOut)
+async def get_plan(
+    plan_id: UUID,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Gibt einen Monatsplan zurück."""
+    repo = MonthlyPlanRepository(db)
+    plan = await repo.get_with_weekly(plan_id)
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    return MonthlyPlanOut(
+        id=plan.id,
+        household_id=plan.household_id,
+        month=plan.month,
+        year=plan.year,
+        status=plan.status,
+        focus_tags=plan.focus_tags or [],
+        generated_at=plan.generated_at,
+        notes=plan.notes,
+    )
+
+
+# ─── Weekly Plan Detail ───────────────────────────────────────────────────
+
+@router.get("/weekly-plans/{wp_id}", response_model=WeeklyPlanOut)
+async def get_weekly_plan(
+    wp_id: UUID,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Gibt einen Wochenplan mit allen MealSlots zurück."""
+    repo = WeeklyPlanRepository(db)
+    weekly = await repo.get_with_slots(wp_id)
+    if not weekly:
+        raise HTTPException(status_code=404, detail="WeeklyPlan not found")
+    return WeeklyPlanOut(
+        id=weekly.id,
+        week_number=weekly.week_number,
+        start_date=weekly.start_date,
+        notes=weekly.notes,
+        meal_slots=[
+            MealSlotOut(
+                id=slot.id,
+                day_of_week=slot.day_of_week,
+                meal_type=slot.meal_type,
+                recipe_id=slot.recipe_id,
+                servings_multiplier=slot.servings_multiplier,
+                is_repeat=slot.is_repeat,
+            )
+            for slot in (weekly.meal_slots or [])
+        ],
+    )
+
+
+# ─── Weekly Plans by Month ────────────────────────────────────────────────
+
+@router.get("/plans/{plan_id}/weeks", response_model=list[WeeklyPlanOut])
+async def list_weekly_plans(
+    plan_id: UUID,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Listet alle Wochenpläne eines Monatsplans."""
+    repo = WeeklyPlanRepository(db)
+    weekly_plans = await repo.get_all(
+        repo.model_class.monthly_plan_id == plan_id,
+        order_by=repo.model_class.week_number,
+    )
+    result = []
+    for wp in weekly_plans:
+        # Lade Slots
+        wp_full = await repo.get_with_slots(wp.id)
+        result.append(WeeklyPlanOut(
+            id=wp.id,
+            week_number=wp.week_number,
+            start_date=wp.start_date,
+            notes=wp.notes,
+            meal_slots=[
+                MealSlotOut(
+                    id=s.id, day_of_week=s.day_of_week,
+                    meal_type=s.meal_type, recipe_id=s.recipe_id,
+                    servings_multiplier=s.servings_multiplier,
+                    is_repeat=s.is_repeat,
+                )
+                for s in (wp_full.meal_slots if wp_full else [])
+            ],
+        ))
+    return result
 
 
 # ─── Grocery-Liste generieren ─────────────────────────────────────────────
 
 @router.post("/grocery/generate", status_code=201)
 async def generate_grocery(
+    weekly_plan_id: Optional[UUID] = Query(None),
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Generiert eine Einkaufsliste aus dem aktuellen Plan."""
+    """Generiert eine Einkaufsliste aus einem WeeklyPlan."""
+    week_repo = WeeklyPlanRepository(db)
+    plan_repo = MonthlyPlanRepository(db)
     recipe_repo = RecipeRepository(db)
-    all_recipes = await recipe_repo.get_all()
-    if not all_recipes:
-        raise HTTPException(status_code=400, detail="No recipes found")
 
-    ings = IngredientRepository(db)
-    all_ingredients = await ings.get_all()
-    ingredients_lookup = {
-        i.id: {"name": i.name, "category": i.category}
-        for i in all_ingredients
-    }
+    if weekly_plan_id:
+        weekly = await week_repo.get_with_slots(weekly_plan_id)
+        if not weekly:
+            raise HTTPException(status_code=404, detail="WeeklyPlan not found")
+        grocery = await generate_and_persist_grocery_list(
+            weekly, db,
+            household_id=UUID(user_id),
+            monthly_plan_id=weekly.monthly_plan_id,
+            week_number=weekly.week_number,
+        )
+    else:
+        # Letzten Monatsplan verwenden
+        latest = await plan_repo.get_latest_for_household(UUID(user_id))
+        if not latest:
+            raise HTTPException(status_code=400, detail="No plans found – generate a plan first")
 
-    dummy_plan = {
-        "meal_slots": [
-            {"recipe_id": r.id, "meal_type": "dinner", "servings_multiplier": 1.0, "is_repeat": False}
-            for r in all_recipes
-        ]
-    }
-    result = build_grocery_list(dummy_plan, ingredients_lookup)
+        weekly_plans = await week_repo.get_all(
+            week_repo.model_class.monthly_plan_id == latest.id,
+            order_by=week_repo.model_class.week_number,
+        )
+        if not weekly_plans:
+            raise HTTPException(status_code=400, detail="No weekly plans found")
 
-    # Einkaufsliste in DB speichern
-    gl_repo = GroceryListRepository(db)
-    grocery = await gl_repo.create(
-        household_id=UUID(user_id),
-        monthly_plan_id=None,
-        week_number=None,
-        is_master_list=True,
-    )
+        weekly = await week_repo.get_with_slots(weekly_plans[0].id)
+        grocery = await generate_and_persist_grocery_list(
+            weekly, db,
+            household_id=UUID(user_id),
+            monthly_plan_id=latest.id,
+            week_number=weekly.week_number,
+        )
+
+    await db.commit()
+
+    gi_repo = GroceryItemRepository(db)
+    items = await gi_repo.get_by_list(grocery.id)
 
     return {
         "grocery_list_id": str(grocery.id),
-        "items": result["items"],
-        "grouped": result["grouped"],
+        "week_number": grocery.week_number,
+        "is_master_list": grocery.is_master_list,
+        "items": [
+            {
+                "id": str(item.id),
+                "ingredient_id": str(item.ingredient_id),
+                "quantity_total": item.quantity_total,
+                "unit": item.unit,
+                "category": item.category_override or "other",
+                "is_checked": item.is_checked,
+                "notes": item.notes,
+            }
+            for item in items
+        ],
     }
+
+
+@router.get("/grocery-lists", response_model=list[GroceryListOut])
+async def list_grocery_lists(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Listet Einkaufslisten eines Households."""
+    repo = GroceryListRepository(db)
+    lists = await repo.get_by_household(UUID(user_id))
+
+    result = []
+    for gl in lists:
+        items = []
+        if gl.items:
+            items = [
+                GroceryItemOut(
+                    id=item.id,
+                    ingredient_name=str(item.ingredient_id),
+                    category=item.category_override or "other",
+                    quantity_total=item.quantity_total,
+                    unit=item.unit,
+                    is_checked=item.is_checked,
+                    notes=item.notes,
+                )
+                for item in gl.items
+            ]
+        result.append(GroceryListOut(
+            id=gl.id,
+            week_number=gl.week_number,
+            is_master_list=gl.is_master_list,
+            generated_at=gl.generated_at,
+            items=items,
+        ))
+    return result
+
+
+@router.get("/grocery-lists/{gl_id}", response_model=GroceryListOut)
+async def get_grocery_list(
+    gl_id: UUID,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Gibt eine Einkaufsliste mit Items zurück."""
+    repo = GroceryListRepository(db)
+    gl = await repo.get_with_items(gl_id)
+    if not gl:
+        raise HTTPException(status_code=404, detail="GroceryList not found")
+    items = []
+    if gl.items:
+        items = [
+            GroceryItemOut(
+                id=item.id,
+                ingredient_name=str(item.ingredient_id),
+                category=item.category_override or "other",
+                quantity_total=item.quantity_total,
+                unit=item.unit,
+                is_checked=item.is_checked,
+                notes=item.notes,
+            )
+            for item in gl.items
+        ]
+    return GroceryListOut(
+        id=gl.id,
+        week_number=gl.week_number,
+        is_master_list=gl.is_master_list,
+        generated_at=gl.generated_at,
+        items=items,
+    )
 
 
 # ─── Stripe-Scaffold ──────────────────────────────────────────────────────

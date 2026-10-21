@@ -10,7 +10,7 @@ from app.core.database import get_db
 from app.core.dependencies import get_current_user_id
 from app.repositories.household import HouseholdRepository
 from app.repositories.member import MemberRepository
-from app.schemas.api import HouseholdCreate, HouseholdOut, MemberCreate, MemberOut
+from app.schemas.api import HouseholdCreate, HouseholdOut, HouseholdUpdate, MemberCreate, MemberOut
 
 router = APIRouter(tags=["households"], dependencies=[Depends(get_current_user_id)])
 
@@ -33,6 +33,55 @@ async def create_household(
         dietary_profile=household.dietary_profile or {},
         created_at=household.created_at,
     )
+
+
+@router.put("/households/{hid}", response_model=HouseholdOut)
+async def update_household(
+    hid: UUID,
+    body: HouseholdUpdate,
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Aktualisiert einen Household (Name, Dietary-Profile)."""
+    repo = HouseholdRepository(db)
+    household = await repo.get(hid)
+    if not household:
+        raise HTTPException(status_code=404, detail="Household not found")
+
+    updates = {}
+    if body.name is not None:
+        updates["name"] = body.name
+    if body.dietary_profile is not None:
+        updates["dietary_profile"] = body.dietary_profile
+
+    if updates:
+        household = await repo.update(hid, **updates)
+
+    return HouseholdOut(
+        id=household.id,
+        name=household.name,
+        dietary_profile=household.dietary_profile or {},
+        created_at=household.created_at,
+    )
+
+
+@router.get("/households", response_model=list[HouseholdOut])
+async def list_households(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Listet alle Households des aktuellen Users."""
+    repo = HouseholdRepository(db)
+    households = await repo.get_by_owner(UUID(user_id))
+    return [
+        HouseholdOut(
+            id=h.id,
+            name=h.name,
+            dietary_profile=h.dietary_profile or {},
+            created_at=h.created_at,
+        )
+        for h in households
+    ]
 
 
 @router.get("/households/{hid}", response_model=HouseholdOut)
