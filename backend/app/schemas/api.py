@@ -188,6 +188,38 @@ class MonthlyPlanOut(BaseModel):
         from_attributes = True
 
 
+# -- WeeklyPlan / MealSlot --------------------------------------------------
+
+class MealSlotOut(BaseModel):
+    id: UUID
+    day_of_week: int
+    meal_type: str
+    recipe_id: UUID
+    servings_multiplier: float
+    is_repeat: bool
+
+    class Config:
+        from_attributes = True
+
+
+class WeeklyPlanOut(BaseModel):
+    id: UUID
+    week_number: int
+    start_date: Optional[date] = None
+    meal_slots: list[MealSlotOut] = []
+    notes: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# -- Household Update --------------------------------------------------------
+
+class HouseholdUpdate(BaseModel):
+    name: Optional[str] = None
+    dietary_profile: Optional[dict] = None
+
+
 # -- Grocery ----------------------------------------------------------------
 
 class GroceryItemOut(BaseModel):
