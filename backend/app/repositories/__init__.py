@@ -1,12 +1,39 @@
-"""Repository-Interface + In-Memory-Implementierung für Kern-Entities."""
+"""Repository-Interface + In-Memory-Implementierung für Kern-Entities.
+
+Dieses Modul enthält:
+1. Alte In-Memory-Dataclasses + Repos (Bestand, von Tests genutzt)
+2. Neue async SQLAlchemy-Repos (für Produktion)
+3. DI-Factory `get_repository()` für FastAPI-Routen
+"""
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, UTC
-from typing import Optional
+from typing import Any, AsyncGenerator, Optional
 from uuid import UUID, uuid4
 
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# ─── Dataclasses ─────────────────────────────────────────────────────────
+# ─── FastAPI-DI: Repo-Factory ────────────────────────────────────────────
+
+from app.core.config import settings
+from app.core.database import get_db
+
+
+async def get_repository(
+    repo_type: type,
+) -> AsyncGenerator[Any, None]:
+    """FastAPI-Dependency: Erzeugt ein Repository mit einer DB-Session.
+
+    Nutzung in Routen:
+        repo: UserRepository = Depends(get_repository(UserRepository))
+    """
+    from app.core.database import get_db
+
+    async for session in get_db():
+        yield repo_type(session)
+
+
+# ─── Dataclasses (In-Memory, für Tests) ──────────────────────────────────
 
 @dataclass
 class UserRecord:
@@ -75,11 +102,13 @@ class WaitlistEntry:
     confirmed_at: Optional[datetime] = None
     confirmation_token: Optional[str] = None
     confirmation_sent_at: Optional[datetime] = None
+    confirmed_ip: Optional[str] = None
     id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
-# ─── Repository-Interfaces ──────────────────────────────────────────────
+# ─── Repository-Interfaces (In-Memory, für Tests) ────────────────────────
+
 
 class UserRepository(ABC):
     @abstractmethod
@@ -119,14 +148,15 @@ class IngredientRepository(ABC):
     def save(self, i: IngredientRecord) -> IngredientRecord: ...
 
 
-class WaitlistRepository(ABC):
+class WaitlistRepositoryABC(ABC):
     @abstractmethod
     def save(self, entry: WaitlistEntry) -> WaitlistEntry: ...
     @abstractmethod
     def get_by_email(self, email: str) -> Optional[WaitlistEntry]: ...
 
 
-# ─── In-Memory-Implementierung ──────────────────────────────────────────
+# ─── In-Memory-Implementierung ───────────────────────────────────────────
+
 
 class InMemoryUserRepo(UserRepository):
     def __init__(self):
@@ -199,7 +229,7 @@ class InMemoryIngredientRepo(IngredientRepository):
         return i
 
 
-class InMemoryWaitlistRepo(WaitlistRepository):
+class InMemoryWaitlistRepo(WaitlistRepositoryABC):
     def __init__(self):
         self._store: dict[str, WaitlistEntry] = {}
         self._email_index: dict[str, str] = {}
@@ -212,3 +242,23 @@ class InMemoryWaitlistRepo(WaitlistRepository):
     def get_by_email(self, email: str) -> Optional[WaitlistEntry]:
         eid = self._email_index.get(email)
         return self._store.get(eid) if eid else None
+
+
+# ─── Neue async SQLAlchemy-Repos (für Produktion) ────────────────────────
+
+from app.repositories.base import BaseRepository  # noqa: E402, F811
+from app.repositories.user import UserRepository as UserRepoDB  # noqa: E402, F811
+from app.repositories.household import HouseholdRepository as HouseholdRepoDB  # noqa: E402, F811
+from app.repositories.member import MemberRepository as MemberRepoDB  # noqa: E402, F811
+from app.repositories.recipe import RecipeRepository as RecipeRepoDB  # noqa: E402, F811
+from app.repositories.ingredient import IngredientRepository as IngredientRepoDB  # noqa: E402, F811
+from app.repositories.plan import (  # noqa: E402, F811
+    WeeklyPlanRepository as WeeklyPlanRepoDB,
+    MonthlyPlanRepository as MonthlyPlanRepoDB,
+    MealSlotRepository as MealSlotRepoDB,
+)
+from app.repositories.grocery import (  # noqa: E402, F811
+    GroceryListRepository as GroceryListRepoDB,
+    GroceryItemRepository as GroceryItemRepoDB,
+)
+from app.repositories.waitlist import WaitlistRepository as WaitlistRepoDB  # noqa: E402, F811

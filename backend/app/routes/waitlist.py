@@ -9,8 +9,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.repositories import WaitlistEntry
-from app.repositories.postgres import PostgresWaitlistRepo, generate_token
+from app.repositories.waitlist import WaitlistRepository, generate_token
 from app.services.email_service import send_confirmation_email
 
 logger = logging.getLogger("sprossa.waitlist")
@@ -31,7 +30,7 @@ class WaitlistSignupResponse(BaseModel):
 @router.post("/waitlist/signup", response_model=WaitlistSignupResponse, status_code=201)
 async def waitlist_signup(body: WaitlistSignupRequest, request: Request, db: AsyncSession = Depends(get_db)):
     """Trägt eine E-Mail in die Beta-Warteliste ein (Postgres-persistent + DOI)."""
-    repo = PostgresWaitlistRepo(db)
+    repo = WaitlistRepository(db)
     existing = await repo.get_by_email(body.email)
     if existing:
         if existing.confirmed_at:
@@ -41,12 +40,11 @@ async def waitlist_signup(body: WaitlistSignupRequest, request: Request, db: Asy
             )
         entry = existing
     else:
-        entry = WaitlistEntry(
+        entry = await repo.create_entry(
             email=body.email,
             name=body.name,
             household_size=body.household_size,
         )
-        entry = await repo.save(entry)
 
     token = generate_token()
     await repo.set_confirmation_token(entry.id, token)
@@ -67,7 +65,7 @@ async def waitlist_signup(body: WaitlistSignupRequest, request: Request, db: Asy
 @router.get("/waitlist/confirm")
 async def waitlist_confirm(token: str, request: Request, db: AsyncSession = Depends(get_db)):
     """Bestätigt eine E-Mail-Adresse via Double-Opt-in-Token."""
-    repo = PostgresWaitlistRepo(db)
+    repo = WaitlistRepository(db)
     entry = await repo.get_by_token(token)
     if entry is None:
         return _confirm_page("error", "Link ungültig",
@@ -96,7 +94,7 @@ async def waitlist_confirm(token: str, request: Request, db: AsyncSession = Depe
 @router.get("/waitlist/unsubscribe")
 async def waitlist_unsubscribe(token: str, db: AsyncSession = Depends(get_db)):
     """Widerruft die Einwilligung (Abmeldung)."""
-    repo = PostgresWaitlistRepo(db)
+    repo = WaitlistRepository(db)
     entry = await repo.get_by_token(token)
     if entry is None:
         return _confirm_page("info", "Bereits abgemeldet",
@@ -116,7 +114,7 @@ async def waitlist_unsubscribe(token: str, db: AsyncSession = Depends(get_db)):
 @router.get("/waitlist/count")
 async def waitlist_count(db: AsyncSession = Depends(get_db)):
     """Gibt die Anzahl der bestätigten + gesamten Wartelisten-Einträge zurück."""
-    repo = PostgresWaitlistRepo(db)
+    repo = WaitlistRepository(db)
     return {"confirmed": await repo.count_confirmed(), "total": await repo.count()}
 
 
