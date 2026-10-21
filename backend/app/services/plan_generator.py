@@ -63,10 +63,10 @@ def generate_weekly_plan_skeleton(
     start_date: date,
     recipe_ids: list[UUID],
     cook_once_recipe_ids: Optional[list[UUID]] = None,
-) -> list[dict]:
+) -> dict:
     """Erzeugt ein Wochenplan-Gerüst (Slots ohne DB-Persistenz).
 
-    Rückgabe: Liste von MealSlot-Dicts
+    Rückgabe: { "week_number": int, "start_date": date, "meal_slots": [...] }
     """
     cook_once = cook_once_recipe_ids or []
     used_recipes = set()
@@ -98,7 +98,11 @@ def generate_weekly_plan_skeleton(
                     "is_repeat": True,
                 })
 
-    return slots
+    return {
+        "week_number": week_number,
+        "start_date": start_date,
+        "meal_slots": slots,
+    }
 
 
 def _pick_recipe(available: list[UUID], used: set[UUID]) -> UUID:
@@ -170,7 +174,7 @@ async def generate_and_persist_monthly_plan(
             start_date=week_start,
             recipe_ids=recipe_ids_for_week,
             cook_once_recipe_ids=cook_once_ids,
-        )
+        )["meal_slots"]
 
         for sd in slot_dicts:
             await slot_repo.create(
@@ -184,3 +188,41 @@ async def generate_and_persist_monthly_plan(
 
     await db.refresh(monthly)
     return monthly
+
+
+# ─── Legacy: In-Memory-Generierung (für bestehende Tests) ────────────────
+
+def generate_monthly_plan(config: GeneratorConfig) -> dict:
+    """Generiert einen kompletten Monatsplan als Dict-Struktur (In-Memory).
+
+    Legacy-Funktion für bestehende Tests. Nutzt keine DB.
+    """
+    import calendar
+    num_weeks = weeks_in_month(config.month, config.year)
+    first_day = date(config.year, config.month, 1)
+
+    weeks = []
+    for week_idx in range(num_weeks):
+        week_start = first_day + timedelta(weeks=week_idx)
+        week_num = week_idx + 1
+
+        cook_once = config.recipe_ids[:config.cook_once_eat_twice_count] if config.cook_once_eat_twice_count > 0 else []
+
+        slot_dicts = generate_weekly_plan_skeleton(
+            week_number=week_num,
+            start_date=week_start,
+            recipe_ids=config.recipe_ids,
+            cook_once_recipe_ids=cook_once,
+        )["meal_slots"]
+
+        weeks.append({
+            "week_number": week_num,
+            "start_date": week_start,
+            "meal_slots": slot_dicts,
+        })
+
+    return {
+        "month": config.month,
+        "year": config.year,
+        "weeks": weeks,
+    }
