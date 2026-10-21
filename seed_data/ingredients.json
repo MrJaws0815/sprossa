@@ -1,87 +1,662 @@
 [
-  {"name": "Karotten",       "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Zwiebeln",       "category": "vegetables",  "unit_default": "Stück", "storage": "Vorrat"},
-  {"name": "Kartoffeln",     "category": "vegetables",  "unit_default": "Stück", "storage": "Vorrat"},
-  {"name": "Brokkoli",       "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Paprika",        "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Tomaten",        "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Gurke",          "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Spinat",         "category": "vegetables",  "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Lauch",          "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Zucchini",       "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Knoblauch",      "category": "vegetables",  "unit_default": "Zehe",  "storage": "Vorrat"},
-  {"name": "Blumenkohl",     "category": "vegetables",  "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Kürbis",         "category": "vegetables",  "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Süßkartoffeln",  "category": "vegetables",  "unit_default": "Stück", "storage": "Vorrat"},
-
-  {"name": "Äpfel",          "category": "fruit",      "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Bananen",        "category": "fruit",      "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Zitronen",       "category": "fruit",      "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Orangen",        "category": "fruit",      "unit_default": "Stück", "storage": "Kühlschrank"},
-
-  {"name": "Hähnchenbrust",  "category": "meat",       "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Rinderhack",     "category": "meat",       "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Schweineschnitzel", "category": "meat",    "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Bacon",          "category": "meat",       "unit_default": "Scheibe","storage": "Kühlschrank"},
-  {"name": "Lachsfilet",     "category": "meat",       "unit_default": "g",     "storage": "Kühlschrank"},
-
-  {"name": "Milch",          "category": "dairy",      "unit_default": "ml",    "storage": "Kühlschrank"},
-  {"name": "Butter",         "category": "dairy",      "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Käse gerieben",  "category": "dairy",      "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Sahne",          "category": "dairy",      "unit_default": "ml",    "storage": "Kühlschrank"},
-  {"name": "Joghurt",        "category": "dairy",      "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Eier",           "category": "dairy",      "unit_default": "Stück", "storage": "Kühlschrank"},
-  {"name": "Quark",          "category": "dairy",      "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Feta",           "category": "dairy",      "unit_default": "g",     "storage": "Kühlschrank"},
-
-  {"name": "Reis",           "category": "grains",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Nudeln",         "category": "grains",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Mehl",           "category": "grains",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Haferflocken",   "category": "grains",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Couscous",       "category": "grains",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Linsen",         "category": "grains",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Quinoa",         "category": "grains",     "unit_default": "g",     "storage": "Vorrat"},
-
-  {"name": "Salz",           "category": "spices",     "unit_default": "Prise", "storage": "Vorrat"},
-  {"name": "Pfeffer",        "category": "spices",     "unit_default": "Prise", "storage": "Vorrat"},
-  {"name": "Paprikapulver",  "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Kurkuma",        "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Kreuzkümmel",    "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Oregano",        "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Basilikum",      "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Thymian",        "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Zimt",           "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Muskatnuss",     "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Currypulver",    "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Chiliflocken",   "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Lorbeerblätter", "category": "spices",     "unit_default": "Stück", "storage": "Vorrat"},
-  {"name": "Rosmarin",       "category": "spices",     "unit_default": "TL",    "storage": "Vorrat"},
-
-  {"name": "Tomaten passiert","category": "canned",    "unit_default": "ml",    "storage": "Vorrat"},
-  {"name": "Kokosmilch",     "category": "canned",     "unit_default": "ml",    "storage": "Vorrat"},
-  {"name": "Bohnen weiß",    "category": "canned",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Kichererbsen",   "category": "canned",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Mais",           "category": "canned",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Oliven",         "category": "canned",     "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Tomatenmark",    "category": "canned",     "unit_default": "EL",    "storage": "Vorrat"},
-
-  {"name": "Erbsen TK",      "category": "frozen",     "unit_default": "g",     "storage": "Tiefkühler"},
-  {"name": "Blätterteig TK", "category": "frozen",     "unit_default": "g",     "storage": "Tiefkühler"},
-  {"name": "Beerenmischung TK","category": "frozen",   "unit_default": "g",     "storage": "Tiefkühler"},
-
-  {"name": "Olivenöl",       "category": "condiments", "unit_default": "EL",    "storage": "Vorrat"},
-  {"name": "Essig",          "category": "condiments", "unit_default": "EL",    "storage": "Vorrat"},
-  {"name": "Senf",           "category": "condiments", "unit_default": "TL",    "storage": "Kühlschrank"},
-  {"name": "Sojasoße",       "category": "condiments", "unit_default": "EL",    "storage": "Kühlschrank"},
-  {"name": "Honig",          "category": "condiments", "unit_default": "EL",    "storage": "Vorrat"},
-  {"name": "Balsamico",      "category": "condiments", "unit_default": "EL",    "storage": "Vorrat"},
-  {"name": "Zitronensaft",   "category": "condiments", "unit_default": "EL",    "storage": "Kühlschrank"},
-
-  {"name": "Hefe",           "category": "other",      "unit_default": "g",     "storage": "Kühlschrank"},
-  {"name": "Backpulver",     "category": "other",      "unit_default": "TL",    "storage": "Vorrat"},
-  {"name": "Zucker",         "category": "other",      "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Nüsse gemischt", "category": "other",      "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Mandeln",        "category": "other",      "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Kokosflocken",   "category": "other",      "unit_default": "g",     "storage": "Vorrat"},
-  {"name": "Hafermilch",     "category": "other",      "unit_default": "ml",    "storage": "Kühlschrank"}
+  {
+    "name": "Karotten",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Zwiebeln",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Knoblauchzehen",
+    "category": "vegetables",
+    "unit_default": "Zehe",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Kartoffeln",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Keller"
+  },
+  {
+    "name": "Süßkartoffeln",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Hokkaido-Kürbis",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Brokkoli",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Blumenkohl",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Spinat (Blatt)",
+    "category": "vegetables",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Champignons",
+    "category": "vegetables",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Rosenkohl",
+    "category": "vegetables",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Rotkohl",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Lauch (Porree)",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Stangensellerie",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Rote Paprika",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Zucchini",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Tomaten",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Cherrytomaten",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Salatgurke",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Avocado",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Rucola",
+    "category": "vegetables",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Feldsalat",
+    "category": "vegetables",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Frische Chilischote",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Ingwer",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Pastinaken",
+    "category": "vegetables",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Grünkohl",
+    "category": "vegetables",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Äpfel",
+    "category": "fruit",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Zitrone",
+    "category": "fruit",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Limette",
+    "category": "fruit",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Granatapfel",
+    "category": "fruit",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Langkornreis",
+    "category": "grains",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Vollkorn-Spaghetti",
+    "category": "grains",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Pasta (Penne/Fusilli)",
+    "category": "grains",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Lasagneblätter",
+    "category": "grains",
+    "unit_default": "Stück",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Couscous",
+    "category": "grains",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Bulgur",
+    "category": "grains",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Weizenmehl",
+    "category": "grains",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Paniermehl",
+    "category": "grains",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Vollkornbrot",
+    "category": "grains",
+    "unit_default": "Stück",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Tortilla-Wraps (groß)",
+    "category": "grains",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Spätzle (Kühlregal)",
+    "category": "grains",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Butter",
+    "category": "dairy",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Milch (3,5%)",
+    "category": "dairy",
+    "unit_default": "ml",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Schlagsahne",
+    "category": "dairy",
+    "unit_default": "ml",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Crème fraîche",
+    "category": "dairy",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Naturjoghurt (3,5%)",
+    "category": "dairy",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Feta",
+    "category": "dairy",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Mozzarella",
+    "category": "dairy",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Parmesan (gerieben)",
+    "category": "dairy",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Gouda (gerieben)",
+    "category": "dairy",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Frischkäse (Natur)",
+    "category": "dairy",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Eier",
+    "category": "dairy",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Rinderhackfleisch",
+    "category": "meat",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Hähnchenbrustfilet",
+    "category": "meat",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Hähnchenkeulen",
+    "category": "meat",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Schweinefilet",
+    "category": "meat",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Lammgulasch",
+    "category": "meat",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Wiener Würstchen",
+    "category": "meat",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Lachsfilet",
+    "category": "meat",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Fischstäbchen",
+    "category": "meat",
+    "unit_default": "Stück",
+    "storage": "Gefrierschrank"
+  },
+  {
+    "name": "Räuchermakrelenfilet",
+    "category": "meat",
+    "unit_default": "Stück",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Frühstücksspeck",
+    "category": "meat",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Zimt (gemahlen)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Räuchertofu",
+    "category": "other",
+    "unit_default": "g",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Salz",
+    "category": "spices",
+    "unit_default": "Prise",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Schwarzer Pfeffer",
+    "category": "spices",
+    "unit_default": "Prise",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Paprikapulver (edelsüß)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Kurkuma (gemahlen)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Kreuzkümmel (gemahlen)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Koriander (gemahlen)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Chiliflocken",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Muskatnuss (gerieben)",
+    "category": "spices",
+    "unit_default": "Prise",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Lorbeerblätter",
+    "category": "spices",
+    "unit_default": "Stück",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Thymian (getrocknet)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Rosmarin (getrocknet)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Majoran",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Oregano",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Basilikum (getrocknet)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Currypulver (mild)",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Garam Masala",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Räucherpaprikapulver",
+    "category": "spices",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Olivenöl",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Rapsöl",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Sesamöl",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Weißweinessig",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Apfelessig",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Sojasauce",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Senf (mittelscharf)",
+    "category": "condiments",
+    "unit_default": "TL",
+    "storage": "Kühlschrank"
+  },
+  {
+    "name": "Honig",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Hefeflocken",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Tahini (Sesammus)",
+    "category": "condiments",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Tomatenmark",
+    "category": "canned",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Passierte Tomaten",
+    "category": "canned",
+    "unit_default": "ml",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Stückige Tomaten (Dose)",
+    "category": "canned",
+    "unit_default": "Dose",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Kokosmilch (Dose)",
+    "category": "canned",
+    "unit_default": "ml",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Kichererbsen (Dose)",
+    "category": "canned",
+    "unit_default": "Dose",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Mais (Dose)",
+    "category": "canned",
+    "unit_default": "Dose",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Weiße Bohnen (Dose)",
+    "category": "canned",
+    "unit_default": "Dose",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Gemüsebrühe (Pulver)",
+    "category": "canned",
+    "unit_default": "TL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Rote Linsen (getrocknet)",
+    "category": "canned",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Braune Linsen (getrocknet)",
+    "category": "canned",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "TK-Erbsen",
+    "category": "frozen",
+    "unit_default": "g",
+    "storage": "Gefrierschrank"
+  },
+  {
+    "name": "TK-Blattspinat",
+    "category": "frozen",
+    "unit_default": "g",
+    "storage": "Gefrierschrank"
+  },
+  {
+    "name": "TK-Gemüsemischung",
+    "category": "frozen",
+    "unit_default": "g",
+    "storage": "Gefrierschrank"
+  },
+  {
+    "name": "Kürbiskerne",
+    "category": "other",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Walnüsse (gehackt)",
+    "category": "other",
+    "unit_default": "g",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Mandeln (geblättert)",
+    "category": "other",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Pinienkerne",
+    "category": "other",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "Kokosflocken",
+    "category": "other",
+    "unit_default": "EL",
+    "storage": "Vorratsschrank"
+  },
+  {
+    "name": "TK-Kräutermischung",
+    "category": "frozen",
+    "unit_default": "g",
+    "storage": "Gefrierschrank"
+  }
 ]

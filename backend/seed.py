@@ -4,41 +4,28 @@
 Lauffähig mit:
     cd backend && python3 seed.py
 
-Idempotent – bei Wiederholung keine Duplikate.
+Löscht bei jedem Lauf alte Daten und legt alle neu an (sauberer Re-Import).
 """
 import asyncio
 import json
 import sys
 from pathlib import Path
 
-# ── Pfad: backend/ muss im sys.path sein ──────────────────────────────────
 BACKEND_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BACKEND_DIR))
 SEED_DIR = BACKEND_DIR.parent / "seed_data"
 
-# ── App-Imports (nach sys.path) ───────────────────────────────────────────
 from app.core.config import settings
 from app.core.database import async_session_factory
 from app.core.auth import hash_password
 from app.models.database import Ingredient, Recipe, RecipeIngredient, User, Household, Member
 from app.repositories.base import BaseRepository
-from sqlalchemy import select
+from sqlalchemy import select, text
 
-
-# ── Logger ────────────────────────────────────────────────────────────────
-def log(label: str, items: list, singular: str = "Eintrag"):
-    n = len(items)
-    if n == 0:
-        print(f"  ✗ {label}: 0 {singular} (bereits vorhanden)")
-    else:
-        print(f"  ✓ {label}: {n} {singular}{'e' if n != 1 else ''} neu angelegt")
-
-
-# ── Core ──────────────────────────────────────────────────────────────────
 
 async def seed():
     print(f"\n{'='*50}")
-    print(f"  Monatsmenü – Seed-Skript")
+    print(f"  Sprossa – Seed-Skript")
     print(f"  DB: {settings.database_url}")
     print(f"{'='*50}\n")
 
@@ -49,7 +36,17 @@ async def seed():
         hh_repo = BaseRepository(session, Household)
         member_repo = BaseRepository(session, Member)
 
-        # ── 1. Zutaten ────────────────────────────────────────────────────
+        # ── Vorab: Alte Daten löschen (sauberer Re-Import) ────
+        print("🗑  Alte Daten löschen...")
+        await session.execute(text("DELETE FROM recipe_ingredients"))
+        await session.execute(text("DELETE FROM recipes"))
+        await session.execute(text("DELETE FROM ingredients"))
+        await session.execute(text("DELETE FROM members"))
+        await session.execute(text("DELETE FROM households"))
+        await session.execute(text("DELETE FROM users"))
+        print("  ✓ Alte Daten gelöscht\n")
+
+        # ── 1. Zutaten importieren ─────────────────────────────
         print("📦 1. Zutaten importieren")
         ingredients_path = SEED_DIR / "ingredients.json"
         if not ingredients_path.exists():
@@ -61,12 +58,8 @@ async def seed():
 
         new_ingredients = []
         for item in ingredients_data:
-            name = item["name"]
-            existing = await ing_repo.get_by_field("name", name)
-            if existing is not None:
-                continue
             ing = Ingredient(
-                name=name,
+                name=item["name"],
                 category=item["category"],
                 unit_default=item.get("unit_default", "Stück"),
                 storage=item.get("storage"),
@@ -78,17 +71,17 @@ async def seed():
             await session.flush()
             for ing in new_ingredients:
                 await session.refresh(ing)
-        log("Zutaten", new_ingredients, "Zutat")
+        print(f"  ✓ {len(new_ingredients)} Zutaten neu angelegt\n")
 
-        # ── 2. Alle Zutaten (inkl. bestehende) für Recipe-Linking laden ────
+        # ── 2. Alle Zutaten als Dict ───────────────────────────
         all_ingredients: dict[str, Ingredient] = {}
-        stmt = __import__("sqlalchemy").select(Ingredient)
+        stmt = select(Ingredient)
         result = await session.execute(stmt)
         for ing in result.scalars().all():
             all_ingredients[ing.name] = ing
 
-        # ── 3. Rezepte ────────────────────────────────────────────────────
-        print("\n🍽  2. Rezepte importieren")
+        # ── 3. Rezepte importieren ─────────────────────────────
+        print("🍽 2. Rezepte importieren")
         recipes_path = SEED_DIR / "recipes.json"
         if not recipes_path.exists():
             print(f"  ❌ Datei nicht gefunden: {recipes_path}")
@@ -97,82 +90,51 @@ async def seed():
         with open(recipes_path) as f:
             recipes_data = json.load(f)
 
-        # Rezepte ohne household_id – wir brauchen erst den Household.
-        # Zwischenspeichern: Titel → Daten inkl. Ingredient-Refs
-        pending_recipes = []
-        for item in recipes_data:
-            title = item["title"]
-            existing = await recipe_repo.get_by_field("title", title)
-            if existing is not None:
-                continue
-            pending_recipes.append(item)
+        print(f"  → {len(recipes_data)} Rezepte in Datei gefunden")
+        pending_recipes = list(recipes_data)
+        print(f"  ✓ {len(pending_recipes)} Rezepte neu anzulegen\n")
 
-        log("Rezepte", pending_recipes, "Rezept")
-
-        # ── 4. Demo-User + Household + Members ────────────────────────────
-        print("\n👤  3. Demo-User anlegen")
+        # ── 4. Demo-User + Household + Members ─────────────────
+        print("👤 3. Demo-User anlegen")
         demo_email = "demo@sprossa.de"
-        demo_user = await user_repo.get_by_field("email", demo_email)
-        if demo_user is None:
-            demo_user = User(
-                email=demo_email,
-                password_hash=hash_password("demo1234"),
-                display_name="Demo Familie",
-            )
-            session.add(demo_user)
-            await session.flush()
-            await session.refresh(demo_user)
-            print(f"  ✓ User: {demo_user.email} (id={demo_user.id})")
-        else:
-            print(f"  ✓ User existiert bereits: {demo_user.email}")
+        demo_user = User(
+            email=demo_email,
+            password_hash=hash_password("demo1234"),
+            display_name="Demo Familie",
+        )
+        session.add(demo_user)
+        await session.flush()
+        await session.refresh(demo_user)
+        print(f"  ✓ User: {demo_user.email} (id={demo_user.id})\n")
 
         # Household
-        print("\n🏠  4. Household + Members anlegen")
-        hh_name = "Familie Sprossa"
-        existing_hh = await hh_repo.get_by_field("name", hh_name)
-        if existing_hh is None:
-            household = Household(name=hh_name, user_id=demo_user.id)
-            session.add(household)
-            await session.flush()
-            await session.refresh(household)
-            print(f"  ✓ Household: {household.name} (id={household.id})")
-        else:
-            household = existing_hh
-            print(f"  ✓ Household existiert bereits: {household.name}")
+        print("🏠 4. Household + Members anlegen")
+        household = Household(name="Familie Sprossa", user_id=demo_user.id)
+        session.add(household)
+        await session.flush()
+        await session.refresh(household)
+        print(f"  ✓ Household: {household.name} (id={household.id})")
 
         # Members
         member_specs = [
             {"name": "Mama", "age": 35},
             {"name": "Papa", "age": 38},
-            {"name": "Kind 1 (8)", "name_clean": "Kind 1", "age": 8},
-            {"name": "Kind 2 (5)", "name_clean": "Kind 2", "age": 5},
+            {"name": "Kind 1", "age": 8},
+            {"name": "Kind 2", "age": 5},
         ]
-        new_members = 0
         for spec in member_specs:
-            mname = spec.get("name_clean", spec["name"])
-            stmt = select(Member).where(
-                Member.household_id == household.id,
-                Member.name == mname,
-            )
-            res = await session.execute(stmt)
-            existing = res.scalar_one_or_none()
-            if existing is not None:
-                print(f"  - Member '{mname}' existiert bereits")
-                continue
             member = Member(
                 household_id=household.id,
-                name=mname,
+                name=spec["name"],
                 age=spec["age"],
             )
             session.add(member)
-            new_members += 1
-        if new_members:
-            await session.flush()
-        print(f"  ✓ Members: {new_members} neu angelegt")
+        await session.flush()
+        print(f"  ✓ {len(member_specs)} Members neu angelegt\n")
 
-        # ── 5. Rezepte mit household_id befüllen ──────────────────────────
+        # ── 5. Rezepte mit household_id befüllen ───────────────
         if pending_recipes:
-            print(f"\n🍽  5. Rezepte in Household schreiben")
+            print(f"🍽 5. Rezepte in Household schreiben")
             for item in pending_recipes:
                 recipe = Recipe(
                     household_id=household.id,
@@ -208,12 +170,12 @@ async def seed():
                     session.add(ri)
 
             await session.flush()
-            print(f"  ✓ {len(pending_recipes)} Rezepte mit Zutaten verknüpft")
+            print(f"  ✓ {len(pending_recipes)} Rezepte mit Zutaten verknüpft\n")
 
-        # ── Commit ────────────────────────────────────────────────────────
+        # ── Commit ─────────────────────────────────────────────
         await session.commit()
 
-    print(f"\n{'='*50}")
+    print(f"{'='*50}")
     print(f"  ✅ Seed abgeschlossen!")
     print(f"{'='*50}\n")
 
