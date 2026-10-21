@@ -1,0 +1,8 @@
+# SPROSSA Test-Instanz – Caddy Reverse-Proxy
+# Simuliert die Produktions-Caddy-Konfiguration lokal.
+# Port 3100: /api/* → backend, sonst → frontend
+
+:3100 {
+  reverse_proxy /api/* sprossa-test-backend:8000
+  reverse_proxy sprossa-test-frontend:3000
+}

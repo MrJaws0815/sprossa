@@ -1,0 +1,71 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# SPROSSA – LOKALE TESTINSTANZ (Staging)
+# Zweck: Deployments zuerst hier testen, dann nach Freigabe auf Produktion
+#        (sprossa.de @ Hetzner 2.31.17.36) deployen.
+#
+# Eigene Ports + eigener Projektname, damit es NICHT mit dem lokalen Dev-Stack
+# (monatsmenue-* auf :3000/:8000) oder der Produktion kollidiert.
+#
+# Start:  docker compose -f docker-compose.test.yml --project-name sprossa-test up -d --build
+# Login:  http://192.168.178.188:3100
+# API:    http://192.168.178.188:8100
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sprossa-test-db
+    environment:
+      POSTGRES_USER: sprossa
+      POSTGRES_PASSWORD: sprossa
+      POSTGRES_DB: sprossa_test
+    ports:
+      - "5433:5432"
+    volumes:
+      - sprossa_test_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sprossa -d sprossa_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 8
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sprossa-test-backend
+    environment:
+      MM_APP_NAME: "Sprossa TEST API"
+      MM_DEBUG: "true"
+      MM_DATABASE_URL: "postgresql+asyncpg://sprossa:sprossa@db:5432/sprossa_test"
+      MM_DATABASE_URL_SYNC: "postgresql://sprossa:sprossa@db:5432/sprossa_test"
+      MM_SECRET_KEY: "sprossa-TEST-secret-key-281014"
+      MM_SMTP_HOST: "${MM_SMTP_HOST:-smtp.strato.de}"
+      MM_SMTP_PORT: "${MM_SMTP_PORT:-587}"
+      MM_SMTP_USE_TLS: "${MM_SMTP_USE_TLS:-true}"
+      MM_SMTP_USERNAME: "${MM_SMTP_USERNAME:-}"
+      MM_SMTP_PASSWORD: "${MM_SMTP_PASSWORD:-}"
+      MM_SMTP_FROM: "${MM_SMTP_FROM:-hallo@sprossa.de}"
+      MM_SMTP_FROM_NAME: "${MM_SMTP_FROM_NAME:-Sprossa}"
+    ports:
+      - "8100:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sprossa-test-frontend
+    environment:
+      NODE_ENV: production
+      BACKEND_UPSTREAM_URL: "http://sprossa-test-backend:8000"
+    ports:
+      - "3100:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  sprossa_test_pgdata:

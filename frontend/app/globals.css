@@ -1,0 +1,23 @@
+@import "tailwindcss";
+/* Tailwind v4 (CSS-first): deklariere zu scannende Quellen. Pfade relativ zu dieser Datei in /app/ */
+@source "./**/*.{html,tsx,ts,jsx,js}";
+
+/* Sprossa Design-Tokens – @theme generiert text-/bg-/border-sprossa-* Utilities */
+@theme {
+  --color-sprossa-green: #3A7D44;
+  --color-sprossa-dark: #2C5F34;
+  --color-sprossa-sage: #EDF3E8;
+  --color-sprossa-cream: #FAF6EF;
+  --color-sprossa-terracotta: #D96B4A;
+  --color-sprossa-amber: #E6A23C;
+  --color-sprossa-ink: #26302B;
+  --color-sprossa-muted: #68736C;
+  --color-sprossa-error: #C0392B;
+}
+
+body {
+  font-family: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #26302B;
+  background: #FAF6EF;
+  scroll-behavior: smooth;
+}

@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sprossa
+      POSTGRES_PASSWORD: sprossa
+      POSTGRES_DB: sprossa
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sprossa -d sprossa"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      MM_DATABASE_URL: "postgresql+asyncpg://sprossa:sprossa@db:5432/sprossa"
+      MM_DATABASE_URL_SYNC: "postgresql://sprossa:sprossa@db:5432/sprossa"
+      MM_SECRET_KEY: "${MM_SECRET_KEY:-change-me-in-production}"
+      MM_DEBUG: "false"
+      MM_APP_NAME: "Sprossa API"
+      MM_SMTP_HOST: "${MM_SMTP_HOST:-smtp.strato.de}"
+      MM_SMTP_PORT: "${MM_SMTP_PORT:-587}"
+      MM_SMTP_USE_TLS: "${MM_SMTP_USE_TLS:-true}"
+      MM_SMTP_USERNAME: "${MM_SMTP_USERNAME:-}"
+      MM_SMTP_PASSWORD: "${MM_SMTP_PASSWORD:-}"
+      MM_SMTP_FROM: "${MM_SMTP_FROM:-hallo@sprossa.de}"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
