@@ -155,7 +155,7 @@ async def seed():
                 await session.refresh(recipe)
 
                 # RecipeIngredient verknüpfen
-                for ing_ref in item.get("ingredients", []):
+                for ing_ref in item.get("ingredient_list", item.get("ingredients", [])):
                     ing_name = ing_ref["name"]
                     ingredient = all_ingredients.get(ing_name)
                     if ingredient is None:
@@ -164,8 +164,8 @@ async def seed():
                     ri = RecipeIngredient(
                         recipe_id=recipe.id,
                         ingredient_id=ingredient.id,
-                        quantity=ing_ref["quantity"],
-                        unit=ing_ref["unit"],
+                        quantity=ing_ref.get("amount", ing_ref.get("quantity", 0)),
+                        unit=ing_ref.get("unit", "Stück"),
                     )
                     session.add(ri)
 

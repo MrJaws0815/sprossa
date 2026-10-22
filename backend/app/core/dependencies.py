@@ -9,7 +9,7 @@ from app.core.auth import decode_access_token
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_current_user_id(
+async def get_current_user_id(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
 ) -> str:
     """FastAPI-Dependency: extrahiert user_id (UUID as str) aus dem Bearer-Token."""

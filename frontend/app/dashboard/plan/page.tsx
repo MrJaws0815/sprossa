@@ -1,183 +1,145 @@
 "use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+const TOKEN_KEY = "sprossa_token";
+const API_BASE = "/api/v1";
+function authHeaders(): Record<string, string> {
+  const token = localStorage.getItem(TOKEN_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+const dayNames = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+
+function currentMonthStr() {
+  const n = new Date();
+  return `${n.getMonth()+1}/${n.getFullYear()}`;
+}
+
 export default function PlanPage() {
-  const TOKEN_KEY = "sprossa_token";
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8100/api/v1";
+  const router = useRouter();
+  const [plans, setPlans] = useState<any[]>([]);
+  const [activePlanId, setActivePlanId] = useState<string | null>(null);
+  const [activePlanLabel, setActivePlanLabel] = useState("–");
+  const [weeks, setWeeks] = useState<any[]>([]);
+  const [selectedWeek, setSelectedWeek] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  let plans: any[] = [];
-  let selectedPlan: any = null;
-  let weeks: any[] = [];
-  let selectedWeek = 0;
-  let currentMonth = new Date().getMonth() + 1;
-  let currentYear = new Date().getFullYear();
+  useEffect(() => {
+    if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
+    loadData();
+  }, []);
 
-  const dayNames = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
-
-  async function loadPlans() {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
-
+  async function loadData() {
     try {
-      const res = await fetch(`${API_BASE}/plans`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        plans = await res.json();
-        if (plans.length > 0) {
-          selectPlan(plans[0].id);
-        }
-      }
-    } catch (e) {
-      console.error("Fehler beim Laden der Pläne", e);
-    }
+      const r = await fetch(`${API_BASE}/plans`, { headers: authHeaders() });
+      if (!r.ok) { setLoading(false); return; }
+      const data: any[] = await r.json();
+      setPlans(data);
+
+      // Aktuellen Monat suchen, sonst den ersten Plan
+      const now = `${new Date().getMonth()+1}/${new Date().getFullYear()}`;
+      let target = data.find(p => `${p.month}/${p.year}` === now);
+      if (!target && data.length > 0) target = data[0];
+      if (target) await selectPlan(target);
+    } catch(e) { console.error(e); }
+    setLoading(false);
   }
 
-  async function selectPlan(planId: string) {
-    const token = localStorage.getItem(TOKEN_KEY);
-    selectedPlan = plans.find((p) => p.id === planId);
-
+  async function selectPlan(p: any) {
+    setActivePlanId(p.id);
+    setActivePlanLabel(`${p.month}/${p.year}`);
     try {
-      const weeksRes = await fetch(`${API_BASE}/plans/${planId}/weeks`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (weeksRes.ok) {
-        weeks = await weeksRes.json();
-      }
-    } catch (e) {
-      console.error("Fehler beim Laden der Wochen", e);
-    }
+      const r = await fetch(`${API_BASE}/plans/${p.id}/weeks`, { headers: authHeaders() });
+      const w = r.ok ? await r.json() : [];
+      setWeeks(w);
+      setSelectedWeek(0);
+    } catch(e) { console.error(e); }
   }
 
   async function generatePlan() {
-    const token = localStorage.getItem(TOKEN_KEY);
-
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+    
+    // Prüfe ob schon ein Plan für diesen Monat existiert
+    const existing = plans.find(p => p.month === currentMonth && p.year === currentYear);
+    if (existing) {
+      if (!confirm("Für " + currentMonth + "/" + currentYear + " existiert bereits ein Plan. Wirklich neu generieren?")) return;
+    }
+    
+    setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/plans/generate`, {
+      await fetch(`${API_BASE}/plans/generate`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ month: currentMonth, year: currentYear }),
       });
-      if (res.ok) {
-        loadPlans();
-      }
-    } catch (e) {
-      console.error("Fehler bei Generierung", e);
-    }
+      await loadData();
+    } catch(e) { console.error(e); }
+    setLoading(false);
   }
 
-  if (typeof window !== "undefined") {
-    loadPlans();
-  }
+  function currentCW() { const d=new Date(); const s=d.getTime(); const y=d.getFullYear(); const jan1=new Date(y,0,1); const days=Math.floor((s-jan1.getTime())/86400000); return Math.ceil((days+jan1.getDay()+1)/7); }
+
+  if (loading) return <p className="p-8 text-center text-sprossa-muted">Lade…</p>;
 
   return (
     <section className="py-8">
-      <div className="mb-4">
-        <Link href="/dashboard" className="text-sprossa-green text-sm">
-          ← Zurück zum Dashboard
-        </Link>
-      </div>
+      <div className="mb-4"><Link href="/dashboard" className="text-sprossa-green text-sm">← Dashboard</Link></div>
 
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">
-          📅 Plan {selectedPlan ? `${selectedPlan.month}/${selectedPlan.year}` : ""}
-        </h1>
-        <button
-          onClick={generatePlan}
-          className="rounded-lg bg-sprossa-green px-4 py-2 text-sm text-white"
-        >
-          + Neuen Plan generieren
-        </button>
+        <h1 className="font-display text-3xl font-bold text-sprossa-ink">📅 {activePlanLabel}</h1>
+        <button onClick={generatePlan} className="rounded-xl bg-sprossa-green px-4 py-2 font-bold text-white hover:bg-sprossa-dark">+ Neuen Plan generieren</button>
       </div>
 
-      {/* Plan-Auswahl */}
+      {/* Archiv: Letzte 12 Pläne */}
       {plans.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {plans.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => selectPlan(p.id)}
-              className={`rounded-lg px-3 py-1 text-sm ${
-                selectedPlan?.id === p.id
-                  ? "bg-sprossa-green text-white"
-                  : "border border-gray-300 text-gray-700"
-              }`}
-            >
-              {p.month}/{p.year} ({p.status})
-            </button>
-          ))}
+          {plans.filter((_, i) => i < 12).map(p => {
+            const label = `${p.month}/${p.year}`;
+            const isCurrent = label === currentMonthStr();
+            return (
+              <button key={p.id} onClick={() => selectPlan(p)}
+                className={`rounded-lg px-3 py-1 text-sm font-bold ${activePlanId===p.id ? "bg-sprossa-green text-white" : isCurrent ? "bg-sprossa-dark text-white" : "border border-sprossa-muted/30 text-sprossa-ink"}`}>
+                {label}{isCurrent ? " ★" : ""}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* Wochen-Navigation */}
-      {weeks.length > 0 && (
-        <div className="mb-6 flex flex-wrap gap-2">
-          {weeks.map((w, i) => (
-            <button
-              key={w.id || i}
-              onClick={() => { selectedWeek = i; }}
-              className={`rounded-lg px-4 py-2 text-sm ${
-                selectedWeek === i
-                  ? "bg-sprossa-green text-white"
-                  : "border border-gray-300 text-gray-700"
-              }`}
-            >
-              Woche {w.week_number}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Wochen-Detail */}
-      {weeks.length > selectedWeek && weeks[selectedWeek] && (
-        <div className="rounded-lg border border-gray-200 p-4">
-          <h2 className="mb-3 text-xl font-semibold">
-            Woche {weeks[selectedWeek].week_number}
-            {weeks[selectedWeek].start_date ? ` – ab ${weeks[selectedWeek].start_date}` : ""}
-          </h2>
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="pb-2 font-semibold">Tag</th>
-                <th className="pb-2 font-semibold">Gericht</th>
-                <th className="pb-2 font-semibold">Art</th>
-                <th className="pb-2 font-semibold">Cook Once?</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(weeks[selectedWeek].meal_slots || []).map((slot: any) => (
-                <tr key={slot.id} className="border-b border-gray-100">
-                  <td className="py-2 font-medium">
-                    {dayNames[slot.day_of_week - 1] || `Tag ${slot.day_of_week}`}
-                  </td>
-                  <td className="py-2">🍽 Rezept</td>
-                  <td className="py-2">{slot.meal_type}</td>
-                  <td className="py-2">{slot.is_repeat ? "🔄 (Repeat)" : "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {weeks[selectedWeek].meal_slots?.filter?.((s: any) => s.is_repeat).length > 0 && (
-            <p className="mt-3 text-xs text-gray-400">
-              🔄 = Cook Once, Eat Twice – nur einmal kochen, am 2. Tag genießen.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Leerer State */}
+      {/* Keine Pläne */}
       {plans.length === 0 && (
-        <div className="rounded-lg border border-gray-200 p-8 text-center">
-          <p className="mb-4 text-gray-600">Noch keine Pläne vorhanden.</p>
-          <button
-            onClick={generatePlan}
-            className="rounded-lg bg-sprossa-green px-6 py-2 text-white"
-          >
-            📅 Ersten Plan generieren
-          </button>
+        <div className="rounded-xl border border-sprossa-ink/10 bg-white p-8 text-center">
+          <p className="mb-4 text-sprossa-muted">Noch keine Pläne.</p>
+          <button onClick={generatePlan} className="rounded-xl bg-sprossa-green px-6 py-2 font-bold text-white">📅 Ersten Plan generieren</button>
+        </div>
+      )}
+
+      {/* Wochen */}
+      {weeks.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {weeks.map((w,i) => (
+            <button key={i} onClick={()=>setSelectedWeek(i)}
+              className={`rounded-lg px-4 py-2 text-sm ${selectedWeek===i?"bg-sprossa-green text-white":"border border-sprossa-muted/30 text-sprossa-ink"}`}>
+              KW {w.cw || w.week_number}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Slots */}
+      {weeks.length > selectedWeek && weeks[selectedWeek] && (
+        <div className="rounded-xl border border-sprossa-ink/10 bg-white p-4">
+          {(weeks[selectedWeek].meal_slots||[]).map((s:any) => (
+            <div key={s.id} className="flex justify-between border-b border-sprossa-ink/10 py-2">
+              <span className="font-medium text-sprossa-ink">{dayNames[s.day_of_week-1]||s.day_of_week}</span>
+              <a href={"/dashboard/recipes/"+s.recipe_id} className="text-sm font-medium text-sprossa-green hover:underline hover:text-sprossa-dark transition-colors">
+                {s.is_repeat ? "🔄 " : "🍽 "}{s.recipe_title}
+              </a>
+            </div>
+          ))}
         </div>
       )}
     </section>
