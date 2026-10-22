@@ -18,8 +18,13 @@ from app.repositories.ingredient import IngredientRepository
 from app.repositories.recipe import RecipeRepository
 from app.repositories.plan import MonthlyPlanRepository, WeeklyPlanRepository
 from app.repositories.grocery import GroceryListRepository, GroceryItemRepository
-from app.services.plan_generator import GeneratorConfig, generate_and_persist_monthly_plan, weeks_in_month
+from app.services.plan_generator import (
+    GeneratorConfig, generate_and_persist_monthly_plan, weeks_in_month,
+    calculate_total_portions,
+)
 from app.services.grocery_engine import generate_and_persist_grocery_list
+from app.repositories.household import HouseholdRepository
+from app.repositories.member import MemberRepository
 
 router = APIRouter(tags=["family"], dependencies=[Depends(get_current_user_id)])
 
@@ -155,7 +160,32 @@ async def generate_plan(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Generiert einen Monatsplan basierend auf vorhandenen Rezepten und persistiert ihn."""
+    """Generiert einen Monatsplan basierend auf vorhandenen Rezepten und persistiert ihn.
+
+    Sprint D – Tasks 16–21:
+    - Lädt dietary_profile aus Household (Task 16)
+    - Lädt Members + deren Allergien + Alter (Tasks 17, 21)
+    - Filtert Rezepte nach Ess-Typ, Allergenen, Abwechslung (Tasks 16, 17, 19)
+    - Wendet Balanceregel pro Woche an (Task 20)
+    - Speichert total_portions im MonthlyPlan (Task 21)
+    """
+    household_id = UUID(user_id)
+
+    # ── Household + Members laden ──
+    household_repo = HouseholdRepository(db)
+    household = await household_repo.get(household_id)
+
+    member_repo = MemberRepository(db)
+    members = await member_repo.get_by_household(household_id)
+
+    # ── Task 21: Portions-Faktor berechnen ──
+    member_dicts = [
+        {"age": m.age, "allergies": m.allergies or []}
+        for m in members if m.is_active
+    ]
+    total_portions = calculate_total_portions(member_dicts)
+
+    # ── Alle Rezept-IDs laden ──
     recipe_repo = RecipeRepository(db)
     all_recipes = await recipe_repo.get_all()
     recipe_ids = [r.id for r in all_recipes]
@@ -163,14 +193,18 @@ async def generate_plan(
         raise HTTPException(status_code=400, detail="No recipes found – create recipes first")
 
     config = GeneratorConfig(
-        household_id=UUID(user_id),
+        household_id=household_id,
         month=body.month,
         year=body.year,
-        member_ids=[],
+        member_ids=[m.id for m in members],
         recipe_ids=recipe_ids,
         cook_once_eat_twice_count=2,
         meals_per_week=5,
         focus_tags=body.focus_tags,
+        # Sprint D
+        dietary_profile=household.dietary_profile if household else {},
+        members=member_dicts,
+        total_portions=total_portions,
     )
 
     monthly = await generate_and_persist_monthly_plan(config, db)
@@ -198,6 +232,7 @@ async def generate_plan(
         "year": body.year,
         "weeks": len(weeks_data),
         "meal_slots_total": total_slots,
+        "total_portions": monthly.total_portions,
         "weekly_plans": weeks_data,
     }
 
@@ -223,6 +258,7 @@ async def list_plans(
             focus_tags=p.focus_tags or [],
             generated_at=p.generated_at,
             notes=p.notes,
+            total_portions=p.total_portions,
         )
         for p in plans
     ]
@@ -248,6 +284,7 @@ async def get_plan(
         focus_tags=plan.focus_tags or [],
         generated_at=plan.generated_at,
         notes=plan.notes,
+        total_portions=plan.total_portions,
     )
 
 
@@ -393,8 +430,18 @@ async def list_grocery_lists(
     db: AsyncSession = Depends(get_db),
 ):
     """Listet Einkaufslisten eines Households."""
+    from app.repositories.household import HouseholdRepository
+
     repo = GroceryListRepository(db)
     lists = await repo.get_by_household(UUID(user_id))
+
+    # Supermarkt aus dietary_profile lesen
+    hh_repo = HouseholdRepository(db)
+    households = await hh_repo.get_by_owner(UUID(user_id))
+    supermarket = "Rewe"
+    if households:
+        dp = households[0].dietary_profile or {}
+        supermarket = dp.get("preferred_supermarket", "Rewe")
 
     result = []
     for gl in lists:
@@ -417,6 +464,7 @@ async def list_grocery_lists(
             week_number=gl.week_number,
             is_master_list=gl.is_master_list,
             generated_at=gl.generated_at,
+            supermarket=supermarket,
             items=items,
         ))
     return result
