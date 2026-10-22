@@ -15,7 +15,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de">
-      {/* Fonts: Nunito (UI/Body) + Fraunces (Displays) – preconnect für schnellen Load */}
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -24,7 +23,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">
+      <body className="antialiased bg-sprossa-cream text-sprossa-ink">
         <SprossaHeader />
         {children}
       </body>
