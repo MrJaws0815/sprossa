@@ -23,7 +23,7 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const r = await fetch(`${API}/register`, {
+      const r = await fetch(`${API}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, display_name: name }),
@@ -32,16 +32,17 @@ export default function RegisterPage() {
         const d = await r.json().catch(() => ({}));
         if (r.status === 409) {
           setMsg("❌ E-Mail bereits registriert – <a href='/login' class='font-semibold text-sprossa-green'>zum Login</a>");
-          setLoading(false); return;
+          return;
         }
-        setMsg("❌ " + ((d as any).detail || "Registrierung fehlgeschlagen"));
-        setLoading(false); return;
+        setMsg("❌ " + ((d as any).detail || "Fehler"));
+        return;
       }
       const d = await r.json();
       localStorage.setItem(TOKEN_KEY, d.access_token);
-      router.push("/onboarding");
+      window.location.href = "/onboarding";
     } catch (e: any) {
       setMsg("❌ " + e.message);
+    } finally {
       setLoading(false);
     }
   }
@@ -49,7 +50,7 @@ export default function RegisterPage() {
   return (
     <div className="mx-auto max-w-md mt-16 px-4">
       <h1 className="font-display text-3xl font-bold text-sprossa-ink mb-1">Konto erstellen</h1>
-      <p className="mb-8 text-sprossa-muted">Erstelle dein Konto und leg in 2 Minuten los.</p>
+      <p className="mb-8 text-sprossa-muted">In 2 Minuten hast du deinen ersten Monatsplan.</p>
 
       <form onSubmit={handleSubmit} className="space-y-4 w-full">
         <div>
@@ -85,7 +86,7 @@ export default function RegisterPage() {
 
         <button type="submit" disabled={loading}
           className="w-full rounded-xl bg-sprossa-green px-4 py-3 font-bold text-white text-base hover:bg-sprossa-dark disabled:opacity-60">
-          {loading ? "Bitte warten …" : "Konto erstellen"}
+          {loading ? "Einen Moment …" : "Konto erstellen"}
         </button>
       </form>
 

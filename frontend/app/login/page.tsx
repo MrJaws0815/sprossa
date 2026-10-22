@@ -16,7 +16,7 @@ export default function LoginPage() {
     e.preventDefault();
     setMsg(""); setLoading(true);
     try {
-      const r = await fetch(`${API}/login`, {
+      const r = await fetch(`${API}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -24,13 +24,14 @@ export default function LoginPage() {
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
         setMsg("❌ " + ((d as any).detail || "Falsche E-Mail oder Passwort"));
-        setLoading(false); return;
+        return; // ← setLoading(false) in finally
       }
       const d = await r.json();
       localStorage.setItem(TOKEN_KEY, d.access_token);
-      router.push("/dashboard");
+      window.location.href = "/dashboard"; // ← redirect via location statt router
     } catch (e: any) {
       setMsg("❌ " + e.message);
+    } finally {
       setLoading(false);
     }
   }
@@ -64,7 +65,7 @@ export default function LoginPage() {
 
         <button type="submit" disabled={loading}
           className="w-full rounded-xl bg-sprossa-green px-4 py-3 font-bold text-white text-base hover:bg-sprossa-dark disabled:opacity-60">
-          {loading ? "Bitte warten …" : "Anmelden"}
+          {loading ? "Einen Moment …" : "Anmelden"}
         </button>
       </form>
 
@@ -74,8 +75,7 @@ export default function LoginPage() {
 
       <div className="mt-8 rounded-xl border-2 border-dashed border-sprossa-green/20 bg-sprossa-sage p-4">
         <h2 className="font-semibold text-sprossa-dark text-base">Demo-Zugang</h2>
-        <p className="text-xs text-sprossa-muted mt-1">Die Felder oben sind bereits mit den Demo-Daten vorausgefüllt. Klick einfach auf „Anmelden".</p>
-        <p className="text-xs text-sprossa-muted mt-1">Du kannst auch eine <a href="/register" className="text-sprossa-green underline">eigene Registrierung</a> anlegen.</p>
+        <p className="text-xs text-sprossa-muted mt-1">Demo-Daten sind bereits eingetragen. Einfach auf <strong>Anmelden</strong> klicken.</p>
       </div>
     </div>
   );
