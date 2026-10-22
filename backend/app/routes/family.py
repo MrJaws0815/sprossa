@@ -15,7 +15,8 @@ router = APIRouter(tags=["family"], dependencies=[Depends(get_current_user_id)])
 class MonthlyPlanCreate(BaseModel):
     month: int; year: int; focus_tags: Optional[list[str]] = None
 class HouseholdUpdate(BaseModel):
-    name: str
+    name: Optional[str] = None
+    dietary_profile: Optional[dict] = None
 class HouseholdCreate(BaseModel):
     name: str
 class MemberCreate(BaseModel):
@@ -173,8 +174,12 @@ WHERE ri.recipe_id=ANY(:rids) GROUP BY ri.ingredient_id, ri.unit, i.category, i.
 
 @router.get("/grocery-lists")
 async def list_grocery_lists(user_id: str = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    # Supermarkt aus dietary_profile lesen
+    rows = await db.execute(t("SELECT dietary_profile FROM households WHERE user_id=:u"), {"u": UUID(user_id)})
+    dp = rows.scalar() or {}
+    supermarket = dp.get("preferred_supermarket", "Rewe") if isinstance(dp, dict) else "Rewe"
     r = await db.execute(t("SELECT id, week_number FROM grocery_lists ORDER BY generated_at DESC"))
-    return [{"id": str(row[0]), "week_number": row[1], "items": []} for row in r.fetchall()]
+    return [{"id": str(row[0]), "week_number": row[1], "supermarket": supermarket, "items": []} for row in r.fetchall()]
 
 @router.get("/grocery-lists/{list_id}")
 async def get_grocery_list(list_id: UUID, user_id: str = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
@@ -188,13 +193,22 @@ async def get_grocery_list(list_id: UUID, user_id: str = Depends(get_current_use
 
 @router.get("/households")
 async def list_households(user_id: str = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
-    r = await db.execute(t("SELECT id, name FROM households WHERE user_id=:u"), {"u": UUID(user_id)})
-    return [{"id": str(row[0]), "name": row[1]} for row in r.fetchall()]
+    r = await db.execute(t("SELECT id, name, dietary_profile FROM households WHERE user_id=:u"), {"u": UUID(user_id)})
+    return [{"id": str(row[0]), "name": row[1], "dietary_profile": row[2] or {}} for row in r.fetchall()]
 
 @router.put("/households/{hid}")
 async def update_household(hid: UUID, body: HouseholdUpdate, user_id: str = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
-    await db.execute(t("UPDATE households SET name=:name WHERE id=:hid AND user_id=:u"), {"name": body.name, "hid": hid, "u": UUID(user_id)})
-    await db.commit()
+    updates = []
+    params = {"hid": hid, "u": UUID(user_id)}
+    if body.name is not None:
+        updates.append("name=:name")
+        params["name"] = body.name
+    if body.dietary_profile is not None:
+        updates.append("dietary_profile=:dp")
+        params["dp"] = body.dietary_profile
+    if updates:
+        await db.execute(t(f"UPDATE households SET {', '.join(updates)} WHERE id=:hid AND user_id=:u"), params)
+        await db.commit()
     return {"status": "ok"}
 
 @router.get("/households/{hid}/members")

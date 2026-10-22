@@ -237,4 +237,5 @@ class GroceryListOut(BaseModel):
     week_number: Optional[int] = None
     is_master_list: bool
     generated_at: datetime
+    supermarket: str = "Rewe"
     items: list[GroceryItemOut] = []

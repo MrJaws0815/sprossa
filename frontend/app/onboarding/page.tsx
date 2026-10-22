@@ -29,16 +29,25 @@ interface MemberInput {
 
 // ─── Steps ───────────────────────────────────────────────────────────────────
 
-const TOTAL_STEPS = 5; // 0-indexed: 0-4
+const TOTAL_STEPS = 6; // 0-indexed: 0-5
 
 type DietType = "fleisch" | "fisch" | "vegetarisch" | "vegan";
 type Allergy = "gluten" | "laktose" | "nüsse" | "ei" | "soja";
+type Cuisine = "deutsch" | "italienisch" | "asiatisch" | "orientalisch" | "mexikanisch";
 type TimeBudget = "under_15" | "15_30" | "30_45" | "over_45";
+type Supermarket = "aldi" | "rewe" | "edeka" | "lidl" | "anderer";
+type ShoppingFrequency = "1x_woche" | "2x_woche" | "mehrmals_woche" | "nach_bedarf";
+type BudgetRange = "under_200" | "200_400" | "400_600" | "600_800" | "over_800";
 
 interface DietaryProfile {
   diet_types: DietType[];
   allergies: Allergy[];
+  disked_ingredients: string;
+  preferred_cuisines: Cuisine[];
   time_budget: TimeBudget | null;
+  preferred_supermarket: Supermarket | null;
+  monthly_budget_range: BudgetRange | null;
+  shopping_frequency: ShoppingFrequency | null;
 }
 
 const DIET_LABELS: Record<DietType, string> = {
@@ -56,11 +65,42 @@ const ALLERGY_LABELS: Record<Allergy, string> = {
   soja: "🫘 Soja",
 };
 
+const CUISINE_LABELS: Record<Cuisine, string> = {
+  deutsch: "🇩🇪 Deutsch",
+  italienisch: "🍝 Italienisch",
+  asiatisch: "🥟 Asiatisch",
+  orientalisch: "🧆 Orientalisch",
+  mexikanisch: "🌮 Mexikanisch",
+};
+
 const TIME_OPTIONS: { value: TimeBudget; label: string; desc: string }[] = [
   { value: "under_15", label: "< 15 Min", desc: "Schnell – abends wenig Zeit" },
   { value: "15_30", label: "15–30 Min", desc: "Normale Abende" },
   { value: "30_45", label: "30–45 Min", desc: "Etwas aufwändiger" },
   { value: "over_45", label: "> 45 Min", desc: "Auch am Wochenende" },
+];
+
+const SUPERMARKET_OPTIONS: { value: Supermarket; label: string }[] = [
+  { value: "aldi", label: "Aldi" },
+  { value: "rewe", label: "Rewe" },
+  { value: "edeka", label: "Edeka" },
+  { value: "lidl", label: "Lidl" },
+  { value: "anderer", label: "Anderer" },
+];
+
+const BUDGET_OPTIONS: { value: BudgetRange; label: string }[] = [
+  { value: "under_200", label: "< 200 €" },
+  { value: "200_400", label: "200–400 €" },
+  { value: "400_600", label: "400–600 €" },
+  { value: "600_800", label: "600–800 €" },
+  { value: "over_800", label: "800+ €" },
+];
+
+const FREQUENCY_OPTIONS: { value: ShoppingFrequency; label: string }[] = [
+  { value: "1x_woche", label: "1×/Woche" },
+  { value: "2x_woche", label: "2×/Woche" },
+  { value: "mehrmals_woche", label: "Mehrmals/Woche" },
+  { value: "nach_bedarf", label: "Nach Bedarf" },
 ];
 
 // ─── Page ──────────────────────────────────────────────────────────────────
@@ -82,14 +122,21 @@ export default function OnboardingPage() {
     { name: "", age: null },
   ]);
 
-  // Step 2 – Diet type & allergies
+  // Step 2 – Diet type, allergies, cuisines, dislikes
   const [dietTypes, setDietTypes] = useState<DietType[]>([]);
   const [allergies, setAllergies] = useState<Allergy[]>([]);
+  const [cuisines, setCuisines] = useState<Cuisine[]>([]);
+  const [diskedIngredients, setDiskedIngredients] = useState("");
 
-  // Step 3 – Time budget
+  // Step 3 – Shopping habits
+  const [supermarket, setSupermarket] = useState<Supermarket | null>(null);
+  const [budgetRange, setBudgetRange] = useState<BudgetRange | null>(null);
+  const [shoppingFrequency, setShoppingFrequency] = useState<ShoppingFrequency | null>(null);
+
+  // Step 4 – Time budget
   const [timeBudget, setTimeBudget] = useState<TimeBudget | null>(null);
 
-  // Step 4 – Summary (final)
+  // Step 5 – Summary (final)
   const [planGenerated, setPlanGenerated] = useState(false);
   const [planResult, setPlanResult] = useState<string | null>(null);
 
@@ -105,8 +152,9 @@ export default function OnboardingPage() {
       case 0: return "🏠 Haushalt";
       case 1: return "👨‍👩‍👧‍👦 Familienmitglieder";
       case 2: return "🥗 Ess-Typ & Allergien";
-      case 3: return "⏰ Zeitbudget";
-      case 4: return "🎉 Fertig!";
+      case 3: return "🛒 Einkaufsgewohnheiten";
+      case 4: return "⏰ Zeitbudget";
+      case 5: return "🎉 Fertig!";
       default: return "";
     }
   }
@@ -148,7 +196,12 @@ export default function OnboardingPage() {
     const dietaryProfile: DietaryProfile = {
       diet_types: dietTypes,
       allergies: allergies,
+      disked_ingredients: diskedIngredients,
+      preferred_cuisines: cuisines,
       time_budget: timeBudget,
+      preferred_supermarket: supermarket,
+      monthly_budget_range: budgetRange,
+      shopping_frequency: shoppingFrequency,
     };
     const res = await fetch(`${API_BASE}/households/${hid}`, {
       method: "PUT",
@@ -185,9 +238,10 @@ export default function OnboardingPage() {
         const valid = members.filter((m) => m.name.trim().length > 0);
         return valid.length >= 1 && valid.length <= 8;
       }
-      case 2: return dietTypes.length > 0; // allergies optional
-      case 3: return timeBudget !== null;
-      case 4: return true;
+      case 2: return dietTypes.length > 0; // allergies, cuisines, dislikes optional
+      case 3: return supermarket !== null && budgetRange !== null && shoppingFrequency !== null;
+      case 4: return timeBudget !== null;
+      case 5: return true;
       default: return false;
     }
   }
@@ -218,7 +272,7 @@ export default function OnboardingPage() {
     }
 
     if (step === 1 && householdId) {
-      // Save members – already done inline for each member, do bulk now
+      // Save members
       setLoading(true);
       try {
         await addMembers(householdId);
@@ -232,7 +286,7 @@ export default function OnboardingPage() {
     }
 
     if (step === 2 && householdId) {
-      // Save diet types + allergies
+      // Save diet types, allergies, cuisines, dislikes
       setLoading(true);
       try {
         await saveDietaryProfile(householdId);
@@ -246,7 +300,7 @@ export default function OnboardingPage() {
     }
 
     if (step === 3 && householdId) {
-      // Save time budget (update dietary_profile)
+      // Save shopping habits
       setLoading(true);
       try {
         await saveDietaryProfile(householdId);
@@ -259,7 +313,21 @@ export default function OnboardingPage() {
       return;
     }
 
-    if (step === 4) {
+    if (step === 4 && householdId) {
+      // Save time budget
+      setLoading(true);
+      try {
+        await saveDietaryProfile(householdId);
+        setStep(5);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    if (step === 5) {
       // Generate plan and go to dashboard
       setLoading(true);
       try {
@@ -319,6 +387,14 @@ export default function OnboardingPage() {
     }
   }
 
+  function toggleCuisine(c: Cuisine) {
+    if (cuisines.includes(c)) {
+      setCuisines(cuisines.filter((x) => x !== c));
+    } else {
+      setCuisines([...cuisines, c]);
+    }
+  }
+
   function selectedDietSummary(): string {
     if (dietTypes.length === 0) return "Nicht ausgewählt";
     return dietTypes.map((d) => DIET_LABELS[d]).join(", ");
@@ -327,6 +403,11 @@ export default function OnboardingPage() {
   function selectedAllergySummary(): string {
     if (allergies.length === 0) return "Keine";
     return allergies.map((a) => ALLERGY_LABELS[a]).join(", ");
+  }
+
+  function selectedCuisineSummary(): string {
+    if (cuisines.length === 0) return "Keine Präferenz";
+    return cuisines.map((c) => CUISINE_LABELS[c]).join(", ");
   }
 
   function memberSummary(): string {
@@ -355,7 +436,7 @@ export default function OnboardingPage() {
 
       <h1 className="mb-6 font-display text-[28px] text-sprossa-ink">{stepTitle()}</h1>
 
-      {/* ═══════════════════════════════ Step 0: Household ═══════════════════════════════ */}
+      {/* ═══ Step 0: Household ═══ */}
       {step === 0 && (
         <div className="space-y-4">
           <p className="mb-4 text-sprossa-muted">
@@ -372,7 +453,7 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════ Step 1: Members ═══════════════════════════════ */}
+      {/* ═══ Step 1: Members ═══ */}
       {step === 1 && (
         <div className="space-y-4">
           <p className="mb-4 text-sprossa-muted">
@@ -427,7 +508,7 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════ Step 2: Diet + Allergies ═══════════════════════════════ */}
+      {/* ═══ Step 2: Diet + Allergies + Cuisines + Dislikes ═══ */}
       {step === 2 && (
         <div className="space-y-6">
           <div>
@@ -469,11 +550,127 @@ export default function OnboardingPage() {
               ))}
             </div>
           </div>
+
+          <div>
+            <h2 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">🍳 Küchen-Präferenzen</h2>
+            <p className="mb-3 text-sm text-sprossa-muted">Welche Küchenrichtungen mögt ihr? (Mehrfachauswahl)</p>
+            <div className="flex flex-wrap gap-3">
+              {(["deutsch", "italienisch", "asiatisch", "orientalisch", "mexikanisch"] as Cuisine[]).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => toggleCuisine(c)}
+                  className={`rounded-xl border-2 px-4 py-3 font-bold text-sm transition-all ${
+                    cuisines.includes(c)
+                      ? "border-sprossa-green bg-sprossa-green/10 text-sprossa-green"
+                      : "border-sprossa-muted/20 bg-white text-sprossa-muted"
+                  }`}
+                >
+                  {CUISINE_LABELS[c]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">🚫 Was isst du nicht?</h2>
+            <p className="mb-3 text-sm text-sprossa-muted">Kommasepariert, z.B. „Pilze, Innereien, Rote Bete"</p>
+            <input
+              type="text"
+              value={diskedIngredients}
+              onChange={(e) => setDiskedIngredients(e.target.value)}
+              className="w-full rounded-xl border border-sprossa-muted/20 px-4 py-3 text-sprossa-ink"
+              placeholder="Pilze, Innereien, Rote Bete"
+            />
+          </div>
         </div>
       )}
 
-      {/* ═══════════════════════════════ Step 3: Time budget ═══════════════════════════════ */}
+      {/* ═══ Step 3: Shopping habits ═══ */}
       {step === 3 && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">🏪 Wo kauft ihr ein?</h2>
+            <div className="space-y-3">
+              {SUPERMARKET_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                    supermarket === opt.value
+                      ? "border-sprossa-green bg-sprossa-green/5"
+                      : "border-sprossa-muted/20 bg-white"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="supermarket"
+                    value={opt.value}
+                    checked={supermarket === opt.value}
+                    onChange={() => setSupermarket(opt.value)}
+                    className="size-5 accent-sprossa-green"
+                  />
+                  <span className="font-bold text-sprossa-ink">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">💰 Monatliches Budget</h2>
+            <p className="mb-3 text-sm text-sprossa-muted">Was gebt ihr monatlich für Lebensmittel aus?</p>
+            <div className="space-y-3">
+              {BUDGET_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                    budgetRange === opt.value
+                      ? "border-sprossa-terracotta bg-sprossa-terracotta/5"
+                      : "border-sprossa-muted/20 bg-white"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="budgetRange"
+                    value={opt.value}
+                    checked={budgetRange === opt.value}
+                    onChange={() => setBudgetRange(opt.value)}
+                    className="size-5 accent-sprossa-green"
+                  />
+                  <span className="font-bold text-sprossa-ink">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">🛍️ Wie oft kauft ihr ein?</h2>
+            <div className="space-y-3">
+              {FREQUENCY_OPTIONS.map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`flex items-center gap-4 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                    shoppingFrequency === opt.value
+                      ? "border-sprossa-green bg-sprossa-green/5"
+                      : "border-sprossa-muted/20 bg-white"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="shoppingFrequency"
+                    value={opt.value}
+                    checked={shoppingFrequency === opt.value}
+                    onChange={() => setShoppingFrequency(opt.value)}
+                    className="size-5 accent-sprossa-green"
+                  />
+                  <span className="font-bold text-sprossa-ink">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ Step 4: Time budget ═══ */}
+      {step === 4 && (
         <div>
           <p className="mb-6 text-sprossa-muted">
             Wie viel Zeit habt ihr abends zum Kochen? Das hilft uns, passende Rezepte auszuwählen.
@@ -506,8 +703,8 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {/* ═══════════════════════════════ Step 4: Done! ═══════════════════════════════ */}
-      {step === 4 && (
+      {/* ═══ Step 5: Done! ═══ */}
+      {step === 5 && (
         <div className="text-center">
           <div className="mb-6 text-6xl">🎉</div>
           <h2 className="mb-4 font-display text-2xl font-bold text-sprossa-green">
@@ -535,6 +732,32 @@ export default function OnboardingPage() {
                 <tr className="border-b border-sprossa-ink/10">
                   <td className="py-2 font-semibold text-sprossa-muted">Allergien</td>
                   <td className="py-2 text-sprossa-ink">{selectedAllergySummary()}</td>
+                </tr>
+                <tr className="border-b border-sprossa-ink/10">
+                  <td className="py-2 font-semibold text-sprossa-muted">Küchen-Präferenzen</td>
+                  <td className="py-2 text-sprossa-ink">{selectedCuisineSummary()}</td>
+                </tr>
+                <tr className="border-b border-sprossa-ink/10">
+                  <td className="py-2 font-semibold text-sprossa-muted">Abneigungen</td>
+                  <td className="py-2 text-sprossa-ink">{diskedIngredients || "Keine"}</td>
+                </tr>
+                <tr className="border-b border-sprossa-ink/10">
+                  <td className="py-2 font-semibold text-sprossa-muted">Supermarkt</td>
+                  <td className="py-2 text-sprossa-ink">
+                    {(() => { const o = SUPERMARKET_OPTIONS.find((o) => o.value === supermarket); return o ? o.label : "–"; })()}
+                  </td>
+                </tr>
+                <tr className="border-b border-sprossa-ink/10">
+                  <td className="py-2 font-semibold text-sprossa-muted">Monatsbudget</td>
+                  <td className="py-2 text-sprossa-ink">
+                    {(() => { const o = BUDGET_OPTIONS.find((o) => o.value === budgetRange); return o ? o.label : "–"; })()}
+                  </td>
+                </tr>
+                <tr className="border-b border-sprossa-ink/10">
+                  <td className="py-2 font-semibold text-sprossa-muted">Einkaufs-Rhythmus</td>
+                  <td className="py-2 text-sprossa-ink">
+                    {(() => { const o = FREQUENCY_OPTIONS.find((o) => o.value === shoppingFrequency); return o ? o.label : "–"; })()}
+                  </td>
                 </tr>
                 <tr>
                   <td className="py-2 font-semibold text-sprossa-muted">Zeitbudget</td>
