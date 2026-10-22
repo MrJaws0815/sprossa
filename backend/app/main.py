@@ -24,7 +24,13 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js Dev
+    allow_origins=[
+        "http://localhost:3000",     # Next.js Dev
+        "http://localhost:3001",     # Next.js Dev (Test)
+        "http://192.168.178.188:3001",  # Test-Instanz
+        "http://192.168.178.188:3100",  # Test-Instanz Proxy
+        "https://sprossa.de",        # Produktion
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
