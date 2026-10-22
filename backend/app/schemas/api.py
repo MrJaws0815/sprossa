@@ -183,6 +183,7 @@ class MonthlyPlanOut(BaseModel):
     focus_tags: Optional[list[str]] = []
     generated_at: Optional[datetime] = None
     notes: Optional[str] = None
+    total_portions: Optional[float] = None
 
     class Config:
         from_attributes = True
@@ -237,4 +238,5 @@ class GroceryListOut(BaseModel):
     week_number: Optional[int] = None
     is_master_list: bool
     generated_at: datetime
+    supermarket: str = "Rewe"
     items: list[GroceryItemOut] = []

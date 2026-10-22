@@ -176,6 +176,7 @@ class MonthlyPlan(Base):
     focus_tags: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String), nullable=True, default=list)
     generated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    total_portions: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=None)
 
     household: Mapped["Household"] = relationship("Household", back_populates="monthly_plans")
     weekly_plans: Mapped[list["WeeklyPlan"]] = relationship("WeeklyPlan", back_populates="monthly_plan", cascade="all, delete-orphan")
