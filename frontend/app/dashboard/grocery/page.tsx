@@ -93,7 +93,15 @@ export default function GroceryPage() {
     }
   }
 
-  if (loading) return <div className="p-8 text-center text-sprossa-muted">Lade Einkaufsliste…</div>;
+  if (loading) return (
+    <section className="py-8">
+      <div className="space-y-4 p-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse bg-sprossa-muted/10 rounded-xl h-24" />
+        ))}
+      </div>
+    </section>
+  );
 
   return (
     <section className="py-8">

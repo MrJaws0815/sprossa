@@ -12,6 +12,7 @@ export default function RecipesPage() {
   const [filterPlanned, setFilterPlanned] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [visibleCount, setVisibleCount] = useState(12);
 
   useEffect(() => {
     if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
@@ -62,7 +63,28 @@ export default function RecipesPage() {
     return true;
   });
 
-  if (loading) return <div className="p-8 text-center text-sprossa-muted">Lade Rezepte…</div>;
+  if (loading) return (
+    <section className="py-8">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 p-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse bg-sprossa-muted/10 rounded-xl h-24" />
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {filtered.length > visibleCount && (
+        <div className="mt-6 text-center">
+          <p className="mb-2 text-sm text-sprossa-muted">
+            Zeige {Math.min(visibleCount, filtered.length)} von {filtered.length} Rezepten
+          </p>
+          <button onClick={() => setVisibleCount(visibleCount + 12)}
+            className="rounded-xl bg-sprossa-green px-6 py-3 font-bold text-white hover:bg-sprossa-dark">
+            Weitere laden …
+          </button>
+        </div>
+      )}
+    </section>
+  );
 
   return (
     <section className="py-8">
@@ -89,7 +111,7 @@ export default function RecipesPage() {
 
       {/* Recipe Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.length > 0 ? filtered.map((r) => (
+        {filtered.length > 0 ? filtered.slice(0, visibleCount).map((r) => (
           <Link key={r.id} href={`/dashboard/recipes/${r.id}`}
             className="group block rounded-xl border border-sprossa-ink/10 bg-white p-4 transition-all hover:shadow-md hover:border-sprossa-green/40 hover:-translate-y-0.5">
             <div className="mb-2 flex items-center justify-between">
@@ -114,6 +136,19 @@ export default function RecipesPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {filtered.length > visibleCount && (
+        <div className="mt-6 text-center">
+          <p className="mb-2 text-sm text-sprossa-muted">
+            Zeige {Math.min(visibleCount, filtered.length)} von {filtered.length} Rezepten
+          </p>
+          <button onClick={() => setVisibleCount(visibleCount + 12)}
+            className="rounded-xl bg-sprossa-green px-6 py-3 font-bold text-white hover:bg-sprossa-dark">
+            Weitere laden …
+          </button>
+        </div>
+      )}
     </section>
   );
 }

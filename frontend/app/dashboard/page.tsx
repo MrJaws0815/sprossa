@@ -69,7 +69,15 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading) return <div className="p-8 text-center text-sprossa-muted">Lade Dashboard…</div>;
+  if (loading) return (
+    <section className="py-8">
+      <div className="grid gap-4 md:grid-cols-3 p-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse bg-sprossa-muted/10 rounded-xl h-24" />
+        ))}
+      </div>
+    </section>
+  );
 
   // Error-State (API-Fehler)
   if (error) {

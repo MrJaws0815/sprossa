@@ -77,7 +77,15 @@ export default function PlanPage() {
 
   function currentCW() { const d=new Date(); const s=d.getTime(); const y=d.getFullYear(); const jan1=new Date(y,0,1); const days=Math.floor((s-jan1.getTime())/86400000); return Math.ceil((days+jan1.getDay()+1)/7); }
 
-  if (loading) return <p className="p-8 text-center text-sprossa-muted">Lade…</p>;
+  if (loading) return (
+    <section className="py-8">
+      <div className="p-8 space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse bg-sprossa-muted/10 rounded-xl h-24" />
+        ))}
+      </div>
+    </section>
+  );
 
   return (
     <section className="py-8">
