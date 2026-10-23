@@ -3,12 +3,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
-const TOKEN_KEY = "sprossa_token";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("demo@sprossa.de");
   const [password, setPassword] = useState("demo1234");
+  const [showPassword, setShowPassword] = useState(false);
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +27,6 @@ export default function LoginPage() {
         return; // ← setLoading(false) in finally
       }
       const d = await r.json();
-      localStorage.setItem(TOKEN_KEY, d.access_token);
       window.location.href = "/dashboard"; // ← redirect via location statt router
     } catch (e: any) {
       setMsg("❌ " + e.message);
@@ -51,10 +50,17 @@ export default function LoginPage() {
         </div>
         <div>
           <label className="block mb-1 text-sm font-semibold text-sprossa-ink">Passwort</label>
-          <input type="password" value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="w-full rounded-xl border-2 border-sprossa-muted/20 bg-white px-4 py-3 text-sprossa-ink text-base"
-            placeholder="******" required minLength={8} />
+          <div className="relative">
+            <input type={showPassword ? "text" : "password"} value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full rounded-xl border-2 border-sprossa-muted/20 bg-white px-4 py-3 pr-12 text-sprossa-ink text-base"
+              placeholder="******" required minLength={8} />
+            <button type="button" onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-lg cursor-pointer"
+              aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}>
+              {showPassword ? "🙈" : "👁"}
+            </button>
+          </div>
         </div>
 
         {msg && (
@@ -62,6 +68,10 @@ export default function LoginPage() {
             {msg}
           </div>
         )}
+
+        <div className="text-right mt-1">
+          <a href="/forgot-password" className="text-sm text-sprossa-muted underline">Passwort vergessen?</a>
+        </div>
 
         <button type="submit" disabled={loading}
           className="w-full rounded-xl bg-sprossa-green px-4 py-3 font-bold text-white text-base hover:bg-sprossa-dark disabled:opacity-60">
