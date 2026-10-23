@@ -31,3 +31,7 @@ class UserRepository(BaseRepository[User]):
     async def get_by_stripe_customer(self, stripe_customer_id: str) -> Optional[User]:
         """Findet User via Stripe-Customer-ID."""
         return await self.get_by_field("stripe_customer_id", stripe_customer_id)
+
+    async def get_by_reset_token(self, token: str) -> Optional[User]:
+        """Findet User via reset_token."""
+        return await self.get_by_field("reset_token", token)
