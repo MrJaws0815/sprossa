@@ -2,15 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const TOKEN_KEY = "sprossa_token";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
-
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
-}
+import { authHeaders, getApiBase, TOKEN_KEY } from "../lib/auth";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -18,7 +10,7 @@ export default function DashboardPage() {
   const [planCount, setPlanCount] = useState(0);
   const [weeklyMeals, setWeeklyMeals] = useState<{ day: string; meal: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -33,20 +25,20 @@ export default function DashboardPage() {
     try {
       const headers = authHeaders();
 
-      const recipesRes = await fetch(`${API_BASE}/recipes`, { headers });
+      const recipesRes = await fetch(`${getApiBase()}/recipes`, { headers });
       if (recipesRes.ok) {
         const recipes = await recipesRes.json();
         setStats((s) => ({ ...s, recipes: recipes.length }));
       }
 
-      const plansRes = await fetch(`${API_BASE}/plans`, { headers });
+      const plansRes = await fetch(`${getApiBase()}/plans`, { headers });
       if (plansRes.ok) {
         const plans = await plansRes.json();
         setPlanCount(plans.length);
         setStats((s) => ({ ...s, weeksPlanned: plans.length * 4 }));
 
         if (plans.length > 0) {
-          const weeksRes = await fetch(`${API_BASE}/plans/${plans[0].id}/weeks`, { headers });
+          const weeksRes = await fetch(`${getApiBase()}/plans/${plans[0].id}/weeks`, { headers });
           if (weeksRes.ok) {
             const weeks = await weeksRes.json();
             if (weeks.length > 0) {
@@ -63,16 +55,15 @@ export default function DashboardPage() {
         }
       }
 
-      const groceryRes = await fetch(`${API_BASE}/grocery-lists`, { headers });
+      const groceryRes = await fetch(`${getApiBase()}/grocery-lists`, { headers });
       if (groceryRes.ok) {
         const lists = await groceryRes.json();
         const total = lists.reduce((acc: number, l: any) => acc + (l.items?.length || 0), 0);
         setStats((s) => ({ ...s, groceryItems: total }));
       }
     } catch (e) {
-      console.error("Dashboard-Fehler", e);
       setStats({ recipes: 0, weeksPlanned: 0, groceryItems: 0 });
-      setError(true);
+      setError("Dashboard-Daten konnten nicht geladen werden");
     } finally {
       setLoading(false);
     }
@@ -87,7 +78,7 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-lg rounded-xl border border-sprossa-error/30 bg-white p-8 text-center">
           <p className="mb-4 text-xl text-sprossa-error font-bold">Dashboard-Daten konnten nicht geladen werden</p>
           <p className="mb-6 text-sm text-sprossa-muted">Bitte ueberpruefe deine Internetverbindung und versuche es erneut.</p>
-          <button onClick={() => { setError(false); setLoading(true); loadDashboard(); }}
+          <button onClick={() => { setError(""); setLoading(true); loadDashboard(); }}
             className="rounded-xl bg-sprossa-green px-6 py-3 font-bold text-white hover:bg-sprossa-dark">
             Erneut versuchen
           </button>

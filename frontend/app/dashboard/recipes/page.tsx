@@ -2,13 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const TOKEN_KEY = "sprossa_token";
-const API_BASE = "/api/v1";
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
 
 export default function RecipesPage() {
   const router = useRouter();
@@ -17,6 +11,7 @@ export default function RecipesPage() {
   const [search, setSearch] = useState("");
   const [filterPlanned, setFilterPlanned] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
@@ -26,18 +21,18 @@ export default function RecipesPage() {
   async function loadAll() {
     try {
       // Alle Rezepte laden
-      const r = await fetch(`${API_BASE}/recipes`, { headers: authHeaders() });
+      const r = await fetch(`${getApiBase()}/recipes`, { headers: authHeaders() });
       const data = r.ok ? await r.json() : [];
       setRecipes(data);
 
       // Alle PläNE laden + deren Rezept-IDs sammeln
-      const p = await fetch(`${API_BASE}/plans`, { headers: authHeaders() });
+      const p = await fetch(`${getApiBase()}/plans`, { headers: authHeaders() });
       if (p.ok) {
         const plans: any[] = await p.json();
         const ids = new Set<string>();
         for (const plan of plans) {
           try {
-            const w = await fetch(`${API_BASE}/plans/${plan.id}/weeks`, { headers: authHeaders() });
+            const w = await fetch(`${getApiBase()}/plans/${plan.id}/weeks`, { headers: authHeaders() });
             if (w.ok) {
               const weeks: any[] = await w.json();
               for (const week of weeks) {
@@ -46,11 +41,11 @@ export default function RecipesPage() {
                 }
               }
             }
-          } catch(e) {}
+          } catch(e) { setError("Fehler beim Laden der Rezepte"); }
         }
         setPlannedIds(ids);
       }
-    } catch(e) {}
+    } catch(e) { setError("Fehler beim Laden der Rezepte"); }
     setLoading(false);
   }
 
@@ -85,6 +80,12 @@ export default function RecipesPage() {
           Nur geplante Rezepte
         </label>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-sprossa-error/10 border border-sprossa-error p-3 text-sm text-sprossa-error font-medium">
+          {error}
+        </div>
+      )}
 
       {/* Recipe Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

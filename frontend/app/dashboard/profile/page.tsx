@@ -2,13 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const TOKEN_KEY = "sprossa_token";
-const API_BASE = "/api/v1";
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
 
 type DietType = "fleisch" | "fisch" | "vegetarisch" | "vegan";
 type Allergy = "gluten" | "laktose" | "nüsse" | "ei" | "soja";
@@ -60,13 +54,14 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [error, setError] = useState("");
 
   // Dietary profile fields
   let dietaryProfile: any = {};
   const [dietTypes, setDietTypes] = useState<string[]>([]);
   const [allergies, setAllergies] = useState<string[]>([]);
   const [cuisines, setCuisines] = useState<string[]>([]);
-  const [diskedIngredients, setDiskedIngredients] = useState("");
+  const [dislikedIngredients, setDislikedIngredients] = useState("");
   const [supermarket, setSupermarket] = useState<string | null>(null);
   const [budgetRange, setBudgetRange] = useState<string | null>(null);
   const [shoppingFrequency, setShoppingFrequency] = useState<string | null>(null);
@@ -91,35 +86,39 @@ export default function ProfilePage() {
   }
 
   async function loadHousehold() {
-    const hhRes = await fetch("${API_BASE}/households", { headers: authHeaders() });
-    if (!hhRes.ok) { setLoading(false); return; }
-    const hhList = await hhRes.json();
-    if (hhList.length > 0) {
-      const hh = hhList[0];
-      setHouseholdId(hh.id);
-      setHouseholdName(hh.name);
-      const dp = hh.dietary_profile || {};
-      dietaryProfile = dp;
-      setDietTypes(dp.diet_types || []);
-      setAllergies(dp.allergies || []);
-      setCuisines(dp.preferred_cuisines || []);
-      setDiskedIngredients(dp.disked_ingredients || "");
-      setSupermarket(dp.preferred_supermarket || null);
-      setBudgetRange(dp.monthly_budget_range || null);
-      setShoppingFrequency(dp.shopping_frequency || null);
-      setTimeBudget(dp.time_budget || null);
+    try {
+      const hhRes = await fetch(`${getApiBase()}/households`, { headers: authHeaders() });
+      if (!hhRes.ok) { setLoading(false); return; }
+      const hhList = await hhRes.json();
+      if (hhList.length > 0) {
+        const hh = hhList[0];
+        setHouseholdId(hh.id);
+        setHouseholdName(hh.name);
+        const dp = hh.dietary_profile || {};
+        dietaryProfile = dp;
+        setDietTypes(dp.diet_types || []);
+        setAllergies(dp.allergies || []);
+        setCuisines(dp.preferred_cuisines || []);
+        setDislikedIngredients(dp.disliked_ingredients || "");
+        setSupermarket(dp.preferred_supermarket || null);
+        setBudgetRange(dp.monthly_budget_range || null);
+        setShoppingFrequency(dp.shopping_frequency || null);
+        setTimeBudget(dp.time_budget || null);
 
-      const mRes = await fetch(`${API_BASE}/households/${hh.id}/members`, { headers: authHeaders() });
-      if (mRes.ok) {
-        const mList = await mRes.json();
-        setMembers(mList);
-        // Initialize portion factors
-        const pf: Record<string, number> = {};
-        for (const m of mList) {
-          pf[m.id] = ageBasedPortionFactor(m.age);
+        const mRes = await fetch(`${getApiBase()}/households/${hh.id}/members`, { headers: authHeaders() });
+        if (mRes.ok) {
+          const mList = await mRes.json();
+          setMembers(mList);
+          // Initialize portion factors
+          const pf: Record<string, number> = {};
+          for (const m of mList) {
+            pf[m.id] = ageBasedPortionFactor(m.age);
+          }
+          setPortionFactors(pf);
         }
-        setPortionFactors(pf);
       }
+    } catch (e: any) {
+      setError(e.message || "Fehler beim Laden des Profils");
     }
     setLoading(false);
   }
@@ -128,47 +127,62 @@ export default function ProfilePage() {
     if (!householdId) return;
     setSaving(true);
     setSaveMsg("");
-    const dp: any = {
-      diet_types: dietTypes,
-      allergies: allergies,
-      preferred_cuisines: cuisines,
-      disked_ingredients: diskedIngredients,
-      preferred_supermarket: supermarket,
-      monthly_budget_range: budgetRange,
-      shopping_frequency: shoppingFrequency,
-      time_budget: timeBudget,
-    };
-    const res = await fetch(`${API_BASE}/households/${householdId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ name: householdName, dietary_profile: dp }),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setSaveMsg("✅ Gespeichert!");
-      setTimeout(() => setSaveMsg(""), 3000);
-    } else {
-      setSaveMsg("❌ Fehler beim Speichern");
+    setError("");
+    try {
+      const dp: any = {
+        diet_types: dietTypes,
+        allergies: allergies,
+        preferred_cuisines: cuisines,
+        disliked_ingredients: dislikedIngredients,
+        preferred_supermarket: supermarket,
+        monthly_budget_range: budgetRange,
+        shopping_frequency: shoppingFrequency,
+        time_budget: timeBudget,
+      };
+      const res = await fetch(`${getApiBase()}/households/${householdId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ name: householdName, dietary_profile: dp }),
+      });
+      if (res.ok) {
+        setSaveMsg("✅ Gespeichert!");
+        setTimeout(() => setSaveMsg(""), 3000);
+      } else {
+        setSaveMsg("❌ Fehler beim Speichern");
+      }
+    } catch (e: any) {
+      setError(e.message || "Fehler beim Speichern des Profils");
     }
+    setSaving(false);
   }
 
   async function addMember() {
     if (!householdId || !newName) return;
-    await fetch(`${API_BASE}/households/${householdId}/members`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ name: newName, age: newAge }),
-    });
-    setNewName(""); setNewAge(null);
-    await loadHousehold();
+    setError("");
+    try {
+      await fetch(`${getApiBase()}/households/${householdId}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ name: newName, age: newAge }),
+      });
+      setNewName(""); setNewAge(null);
+      await loadHousehold();
+    } catch (e: any) {
+      setError(e.message || "Fehler beim Hinzufügen des Mitglieds");
+    }
   }
 
   async function removeMember(mid: string) {
     if (!householdId) return;
-    await fetch(`${API_BASE}/households/${householdId}/members/${mid}`, {
-      method: "DELETE", headers: authHeaders(),
-    });
-    await loadHousehold();
+    setError("");
+    try {
+      await fetch(`${getApiBase()}/households/${householdId}/members/${mid}`, {
+        method: "DELETE", headers: authHeaders(),
+      });
+      await loadHousehold();
+    } catch (e: any) {
+      setError(e.message || "Fehler beim Entfernen des Mitglieds");
+    }
   }
 
   // ─── Toggle helpers ──────────────────────────────────────────────────────
@@ -252,7 +266,7 @@ export default function ProfilePage() {
           <h3 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">Abneigungen</h3>
           <p className="mb-1 text-xs text-sprossa-muted">Kommasepariert, z.B. „Pilze, Innereien, Rote Bete"</p>
           <input type="text" className="w-full rounded-xl border border-sprossa-muted/20 px-4 py-2 text-sprossa-ink"
-            value={diskedIngredients} onChange={(e) => setDiskedIngredients(e.target.value)}
+            value={dislikedIngredients} onChange={(e) => setDislikedIngredients(e.target.value)}
             placeholder="Pilze, Innereien, Rote Bete" />
         </div>
       </div>
@@ -341,6 +355,12 @@ export default function ProfilePage() {
         </button>
         {saveMsg && <span className="text-sm font-medium text-sprossa-ink">{saveMsg}</span>}
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-sprossa-error/10 border border-sprossa-error p-3 text-sm text-sprossa-error font-medium">
+          {error}
+        </div>
+      )}
 
       <div className="rounded-xl border border-sprossa-ink/10 bg-white p-6">
         <h2 className="mb-2 font-display text-xl font-semibold text-sprossa-ink">🔑 Token</h2>

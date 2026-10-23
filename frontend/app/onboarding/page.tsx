@@ -1,15 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const TOKEN_KEY = "sprossa_token";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
-
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
-}
+import { authHeaders, getApiBase, TOKEN_KEY } from "../lib/auth";
 
 function getTokenOrRedirect(router: any): string | null {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -42,7 +34,7 @@ type BudgetRange = "under_200" | "200_400" | "400_600" | "600_800" | "over_800";
 interface DietaryProfile {
   diet_types: DietType[];
   allergies: Allergy[];
-  disked_ingredients: string;
+  disliked_ingredients: string;
   preferred_cuisines: Cuisine[];
   time_budget: TimeBudget | null;
   preferred_supermarket: Supermarket | null;
@@ -126,7 +118,7 @@ export default function OnboardingPage() {
   const [dietTypes, setDietTypes] = useState<DietType[]>([]);
   const [allergies, setAllergies] = useState<Allergy[]>([]);
   const [cuisines, setCuisines] = useState<Cuisine[]>([]);
-  const [diskedIngredients, setDiskedIngredients] = useState("");
+  const [dislikedIngredients, setDislikedIngredients] = useState("");
 
   // Step 3 – Shopping habits
   const [supermarket, setSupermarket] = useState<Supermarket | null>(null);
@@ -164,7 +156,7 @@ export default function OnboardingPage() {
   }
 
   async function createHousehold(): Promise<string | null> {
-    const res = await fetch(`${API_BASE}/households`, {
+    const res = await fetch(`${getApiBase()}/households`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ name: householdName, dietary_profile: {} }),
@@ -180,7 +172,7 @@ export default function OnboardingPage() {
   async function addMembers(hid: string): Promise<void> {
     for (const m of members) {
       if (!m.name.trim()) continue;
-      const res = await fetch(`${API_BASE}/households/${hid}/members`, {
+      const res = await fetch(`${getApiBase()}/households/${hid}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ name: m.name.trim(), age: m.age }),
@@ -196,14 +188,14 @@ export default function OnboardingPage() {
     const dietaryProfile: DietaryProfile = {
       diet_types: dietTypes,
       allergies: allergies,
-      disked_ingredients: diskedIngredients,
+      disliked_ingredients: dislikedIngredients,
       preferred_cuisines: cuisines,
       time_budget: timeBudget,
       preferred_supermarket: supermarket,
       monthly_budget_range: budgetRange,
       shopping_frequency: shoppingFrequency,
     };
-    const res = await fetch(`${API_BASE}/households/${hid}`, {
+    const res = await fetch(`${getApiBase()}/households/${hid}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ dietary_profile: dietaryProfile }),
@@ -215,7 +207,7 @@ export default function OnboardingPage() {
 
   async function generatePlan(): Promise<void> {
     const now = new Date();
-    const res = await fetch(`${API_BASE}/plans/generate`, {
+    const res = await fetch(`${getApiBase()}/plans/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ month: now.getMonth() + 1, year: now.getFullYear() }),
@@ -576,8 +568,8 @@ export default function OnboardingPage() {
             <p className="mb-3 text-sm text-sprossa-muted">Kommasepariert, z.B. „Pilze, Innereien, Rote Bete"</p>
             <input
               type="text"
-              value={diskedIngredients}
-              onChange={(e) => setDiskedIngredients(e.target.value)}
+              value={dislikedIngredients}
+              onChange={(e) => setDislikedIngredients(e.target.value)}
               className="w-full rounded-xl border border-sprossa-muted/20 px-4 py-3 text-sprossa-ink"
               placeholder="Pilze, Innereien, Rote Bete"
             />
@@ -739,7 +731,7 @@ export default function OnboardingPage() {
                 </tr>
                 <tr className="border-b border-sprossa-ink/10">
                   <td className="py-2 font-semibold text-sprossa-muted">Abneigungen</td>
-                  <td className="py-2 text-sprossa-ink">{diskedIngredients || "Keine"}</td>
+                  <td className="py-2 text-sprossa-ink">{dislikedIngredients || "Keine"}</td>
                 </tr>
                 <tr className="border-b border-sprossa-ink/10">
                   <td className="py-2 font-semibold text-sprossa-muted">Supermarkt</td>

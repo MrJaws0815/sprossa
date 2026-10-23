@@ -2,12 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-
-const TOKEN_KEY = "sprossa_token";
-const API_BASE = "/api/v1";
-function auth(): Record<string, string> {
-  const t = localStorage.getItem(TOKEN_KEY); return t ? { Authorization: `Bearer ${t}` } : {};
-}
+import { authHeaders, getApiBase, TOKEN_KEY } from "../../../lib/auth";
 
 const catLabels: Record<string, string> = {
   vegetables: "🥦 Gemüse", fruit: "🍎 Obst", meat: "🥩 Fleisch/Fisch", dairy: "🥛 Milchprodukte",
@@ -24,7 +19,7 @@ export default function RecipeDetailPage() {
 
   useEffect(() => {
     if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
-    fetch(`${API_BASE}/recipes/${params.id}`, { headers: auth() })
+    fetch(`${getApiBase()}/recipes/${params.id}`, { headers: authHeaders() })
       .then(r => r.ok ? r.json() : null)
       .then(d => { setRecipe(d); setLoading(false); })
       .catch(() => setLoading(false));

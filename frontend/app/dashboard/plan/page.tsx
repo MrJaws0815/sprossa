@@ -2,13 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const TOKEN_KEY = "sprossa_token";
-const API_BASE = "/api/v1";
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
 const dayNames = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 
 function currentMonthStr() {
@@ -24,6 +18,7 @@ export default function PlanPage() {
   const [weeks, setWeeks] = useState<any[]>([]);
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
@@ -32,7 +27,7 @@ export default function PlanPage() {
 
   async function loadData() {
     try {
-      const r = await fetch(`${API_BASE}/plans`, { headers: authHeaders() });
+      const r = await fetch(`${getApiBase()}/plans`, { headers: authHeaders() });
       if (!r.ok) { setLoading(false); return; }
       const data: any[] = await r.json();
       setPlans(data);
@@ -42,7 +37,7 @@ export default function PlanPage() {
       let target = data.find(p => `${p.month}/${p.year}` === now);
       if (!target && data.length > 0) target = data[0];
       if (target) await selectPlan(target);
-    } catch(e) { console.error(e); }
+    } catch(e) { setError("Fehler beim Laden der Pläne"); }
     setLoading(false);
   }
 
@@ -50,11 +45,11 @@ export default function PlanPage() {
     setActivePlanId(p.id);
     setActivePlanLabel(`${p.month}/${p.year}`);
     try {
-      const r = await fetch(`${API_BASE}/plans/${p.id}/weeks`, { headers: authHeaders() });
+      const r = await fetch(`${getApiBase()}/plans/${p.id}/weeks`, { headers: authHeaders() });
       const w = r.ok ? await r.json() : [];
       setWeeks(w);
       setSelectedWeek(0);
-    } catch(e) { console.error(e); }
+    } catch(e) { setError("Fehler beim Laden der Pläne"); }
   }
 
   async function generatePlan() {
@@ -70,13 +65,13 @@ export default function PlanPage() {
     
     setLoading(true);
     try {
-      await fetch(`${API_BASE}/plans/generate`, {
+      await fetch(`${getApiBase()}/plans/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ month: currentMonth, year: currentYear }),
       });
       await loadData();
-    } catch(e) { console.error(e); }
+    } catch(e) { setError("Fehler beim Laden der Pläne"); }
     setLoading(false);
   }
 
@@ -92,6 +87,12 @@ export default function PlanPage() {
         <h1 className="font-display text-3xl font-bold text-sprossa-ink">📅 {activePlanLabel}</h1>
         <button onClick={generatePlan} className="rounded-xl bg-sprossa-green px-4 py-2 font-bold text-white hover:bg-sprossa-dark">+ Neuen Plan generieren</button>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-sprossa-error/10 border border-sprossa-error p-3 text-sm text-sprossa-error font-medium">
+          {error}
+        </div>
+      )}
 
       {/* Archiv: Letzte 12 Pläne */}
       {plans.length > 0 && (

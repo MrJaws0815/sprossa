@@ -2,13 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-
-const TOKEN_KEY = "sprossa_token";
-const API_BASE = "/api/v1";
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
 
 const categoryLabels: Record<string, string> = {
   vegetables: "🥦 Gemüse", fruit: "🍎 Obst", meat: "🥩 Fleisch", dairy: "🥛 Milchprodukte",
@@ -31,6 +25,7 @@ export default function GroceryPage() {
   const [grouped, setGrouped] = useState<Record<string, any[]>>({});
   const [checked, setChecked] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const cw = currentWeek();
 
   useEffect(() => {
@@ -39,49 +34,63 @@ export default function GroceryPage() {
   }, []);
 
   async function loadGrocery() {
-    const r = await fetch(`${API_BASE}/grocery-lists`, { headers: authHeaders() });
-    if (!r.ok) { setLoading(false); return; }
-    const data = await r.json();
-    setLists(data);
-    if (data.length > 0) {
-      await selectList(data[0].id);
-    } else {
-      // Automatisch generieren wenn leer
-      await fetch(`\${API_BASE}/grocery/generate`, { method: "POST", headers: authHeaders() });
-      const r2 = await fetch(`\${API_BASE}/grocery-lists`, { headers: authHeaders() });
-      if (r2.ok) {
-        const d2 = await r2.json();
-        setLists(d2);
-        if (d2.length > 0) await selectList(d2[0].id);
+    try {
+      const r = await fetch(`${getApiBase()}/grocery-lists`, { headers: authHeaders() });
+      if (!r.ok) { setLoading(false); return; }
+      const data = await r.json();
+      setLists(data);
+      if (data.length > 0) {
+        await selectList(data[0].id);
+      } else {
+        // Automatisch generieren wenn leer
+        await fetch(`${getApiBase()}/grocery/generate`, { method: "POST", headers: authHeaders() });
+        const r2 = await fetch(`${getApiBase()}/grocery-lists`, { headers: authHeaders() });
+        if (r2.ok) {
+          const d2 = await r2.json();
+          setLists(d2);
+          if (d2.length > 0) await selectList(d2[0].id);
+        }
       }
+    } catch (e: any) {
+      setError(e.message || "Fehler beim Laden der Einkaufsliste");
     }
     setLoading(false);
   }
 
   async function selectList(id: string) {
-    const list = lists.find((l) => l.id === id) || { id };
-    setSelectedList(list);
-    const r = await fetch(`${API_BASE}/grocery-lists/${id}`, { headers: authHeaders() });
-    if (!r.ok) return;
-    const full = await r.json();
-    const g: Record<string, any[]> = {};
-    for (const item of full.items || []) {
-      const cat = item.category || "other";
-      if (!g[cat]) g[cat] = [];
-      g[cat].push(item);
+    setError("");
+    try {
+      const list = lists.find((l) => l.id === id) || { id };
+      setSelectedList(list);
+      const r = await fetch(`${getApiBase()}/grocery-lists/${id}`, { headers: authHeaders() });
+      if (!r.ok) return;
+      const full = await r.json();
+      const g: Record<string, any[]> = {};
+      for (const item of full.items || []) {
+        const cat = item.category || "other";
+        if (!g[cat]) g[cat] = [];
+        g[cat].push(item);
+      }
+      setGrouped(g);
+      // Checkbox-Status aus localStorage laden
+      const ck: Record<string, boolean> = {};
+      for (const it of full.items || []) {
+        if (localStorage.getItem("grocery_checked_"+it.id)) ck[it.id] = true;
+      }
+      setChecked(ck);
+    } catch (e: any) {
+      setError(e.message || "Fehler beim Laden der Liste");
     }
-    setGrouped(g);
-    // Checkbox-Status aus localStorage laden
-    const ck: Record<string, boolean> = {};
-    for (const it of full.items || []) {
-      if (localStorage.getItem("grocery_checked_"+it.id)) ck[it.id] = true;
-    }
-    setChecked(ck);
   }
 
   async function generateGrocery() {
-    await fetch(`${API_BASE}/grocery/generate`, { method: "POST", headers: authHeaders() });
-    await loadGrocery();
+    setError("");
+    try {
+      await fetch(`${getApiBase()}/grocery/generate`, { method: "POST", headers: authHeaders() });
+      await loadGrocery();
+    } catch (e: any) {
+      setError(e.message || "Fehler beim Generieren der Liste");
+    }
   }
 
   if (loading) return <div className="p-8 text-center text-sprossa-muted">Lade Einkaufsliste…</div>;
@@ -93,6 +102,12 @@ export default function GroceryPage() {
         <h1 className="font-display text-3xl font-bold text-sprossa-ink">🛒 Einkaufsliste</h1>
         <button onClick={generateGrocery} className="rounded-xl bg-sprossa-green px-4 py-2 font-bold text-white hover:bg-sprossa-dark">+ Neue Liste</button>
       </div>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-sprossa-error/10 border border-sprossa-error p-3 text-sm text-sprossa-error font-medium">
+          {error}
+        </div>
+      )}
 
       {/* Listen-Auswahl mit KW */}
       {lists.length > 0 && (
