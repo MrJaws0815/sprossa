@@ -174,7 +174,7 @@ async def reset_password(
         reset_token=None,
         reset_token_expires=None,
     )
-return {"message": "Passwort erfolgreich zurückgesetzt."}
+    return {"message": "Passwort erfolgreich zurückgesetzt."}
 
 
 # ─── POST /auth/logout ────────────────────────────────────────────────────
