@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, UTC
 from typing import Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -53,7 +53,7 @@ class ResetPasswordRequest(BaseModel):
 # ─── POST /auth/register ──────────────────────────────────────────────────
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register(body: RegisterRequest, response: Response, db: AsyncSession = Depends(get_db)):
     repo = UserRepository(db)
     existing = await repo.get_by_email(body.email)
     if existing:
@@ -67,13 +67,22 @@ async def register(body: RegisterRequest, db: AsyncSession = Depends(get_db)):
         display_name=body.display_name,
     )
     token = create_access_token(subject=str(user.id))
+    response.set_cookie(
+        key="sprossa_token",
+        value=token,
+        httponly=True,
+        secure=False,       # True in Produktion
+        samesite="lax",
+        max_age=86400,      # 24h
+        path="/",
+    )
     return TokenResponse(access_token=token)
 
 
 # ─── POST /auth/login ─────────────────────────────────────────────────────
 
 @router.post("/login")
-async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(body: LoginRequest, response: Response, db: AsyncSession = Depends(get_db)):
     repo = UserRepository(db)
     user = await repo.get_by_email(body.email)
     if user is None or not verify_password(body.password, user.password_hash):
@@ -82,6 +91,15 @@ async def login(body: LoginRequest, db: AsyncSession = Depends(get_db)):
             detail="Invalid credentials",
         )
     token = create_access_token(subject=str(user.id))
+    response.set_cookie(
+        key="sprossa_token",
+        value=token,
+        httponly=True,
+        secure=False,       # True in Produktion
+        samesite="lax",
+        max_age=86400,      # 24h
+        path="/",
+    )
     return TokenResponse(access_token=token)
 
 
@@ -156,4 +174,25 @@ async def reset_password(
         reset_token=None,
         reset_token_expires=None,
     )
-    return {"message": "Passwort erfolgreich zurückgesetzt."}
+return {"message": "Passwort erfolgreich zurückgesetzt."}
+
+
+# ─── POST /auth/logout ────────────────────────────────────────────────────
+
+
+@router.post("/logout")
+async def logout(
+    response: Response,
+    user_id: str = Depends(get_current_user_id),
+):
+    """Löscht das httpOnly-Cookie sprossa_token."""
+    response.set_cookie(
+        key="sprossa_token",
+        value="",
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=0,      # Cookie sofort löschen
+        path="/",
+    )
+    return {"message": "Logged out"}

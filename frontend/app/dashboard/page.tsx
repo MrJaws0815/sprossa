@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../lib/auth";
+import { authHeaders, getApiBase } from "../lib/auth";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -13,11 +13,6 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      router.push("/login");
-      return;
-    }
     loadDashboard();
   }, []);
 
@@ -104,7 +99,7 @@ export default function DashboardPage() {
             👤 Profil
           </Link>
           <button
-            onClick={() => { localStorage.removeItem(TOKEN_KEY); router.push("/login"); }}
+            onClick={() => { fetch(`${getApiBase()}/auth/logout`, { method: "POST" }).finally(() => router.push("/login")); }}
             className="rounded-lg border border-sprossa-error px-4 py-2 text-sm text-sprossa-error"
           >
             🚪 Logout

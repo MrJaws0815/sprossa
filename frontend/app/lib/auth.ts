@@ -1,9 +1,7 @@
 export const TOKEN_KEY = "sprossa_token";
 
 export function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) return {};
-  return { Authorization: `Bearer ${token}` };
+  return {}; // httpOnly-Cookie wird automatisch vom Browser gesendet
 }
 
 export function getApiBase(): string {

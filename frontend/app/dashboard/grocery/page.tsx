@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
+import { authHeaders, getApiBase } from "../../lib/auth";
 
 const categoryLabels: Record<string, string> = {
   vegetables: "🥦 Gemüse", fruit: "🍎 Obst", meat: "🥩 Fleisch", dairy: "🥛 Milchprodukte",
@@ -29,7 +29,6 @@ export default function GroceryPage() {
   const cw = currentWeek();
 
   useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
     loadGrocery();
   }, []);
 

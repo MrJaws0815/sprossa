@@ -1,16 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../lib/auth";
+import { authHeaders, getApiBase } from "../lib/auth";
 
-function getTokenOrRedirect(router: any): string | null {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (!token) {
-    router.push("/login");
-    return null;
-  }
-  return token;
-}
 
 // ─── Member interface ────────────────────────────────────────────────────────
 
@@ -133,7 +125,6 @@ export default function OnboardingPage() {
   const [planResult, setPlanResult] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = getTokenOrRedirect(router);
     if (!token) return;
   }, []);
 

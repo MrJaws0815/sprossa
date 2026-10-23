@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
+import { authHeaders, getApiBase } from "../../lib/auth";
 
 export default function RecipesPage() {
   const router = useRouter();
@@ -15,7 +15,6 @@ export default function RecipesPage() {
   const [visibleCount, setVisibleCount] = useState(12);
 
   useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
     loadAll();
   }, []);
 
