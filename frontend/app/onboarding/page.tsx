@@ -125,7 +125,7 @@ export default function OnboardingPage() {
   const [planResult, setPlanResult] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!token) return;
+    // Auth-Check erfolgt ueber httpOnly-Cookie – bei 401 wird zum Login weitergeleitet
   }, []);
 
   // ─── Helpers ────────────────────────────────────────────────────────────
