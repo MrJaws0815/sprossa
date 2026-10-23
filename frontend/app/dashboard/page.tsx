@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../lib/auth";
+import { authHeaders, getApiBase } from "../lib/auth";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -13,11 +13,6 @@ export default function DashboardPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) {
-      router.push("/login");
-      return;
-    }
     loadDashboard();
   }, []);
 
@@ -69,7 +64,15 @@ export default function DashboardPage() {
     }
   }
 
-  if (loading) return <div className="p-8 text-center text-sprossa-muted">Lade Dashboard…</div>;
+  if (loading) return (
+    <section className="py-8">
+      <div className="grid gap-4 md:grid-cols-3 p-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse bg-sprossa-muted/10 rounded-xl h-24" />
+        ))}
+      </div>
+    </section>
+  );
 
   // Error-State (API-Fehler)
   if (error) {
@@ -96,7 +99,7 @@ export default function DashboardPage() {
             👤 Profil
           </Link>
           <button
-            onClick={() => { localStorage.removeItem(TOKEN_KEY); router.push("/login"); }}
+            onClick={() => { fetch(`${getApiBase()}/auth/logout`, { method: "POST" }).finally(() => router.push("/login")); }}
             className="rounded-lg border border-sprossa-error px-4 py-2 text-sm text-sprossa-error"
           >
             🚪 Logout

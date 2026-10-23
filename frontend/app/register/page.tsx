@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api/v1";
-const TOKEN_KEY = "sprossa_token";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -38,7 +37,6 @@ export default function RegisterPage() {
         return;
       }
       const d = await r.json();
-      localStorage.setItem(TOKEN_KEY, d.access_token);
       window.location.href = "/onboarding";
     } catch (e: any) {
       setMsg("❌ " + e.message);

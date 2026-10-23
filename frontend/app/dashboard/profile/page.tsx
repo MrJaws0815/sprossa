@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
+import { authHeaders, getApiBase } from "../../lib/auth";
 
 type DietType = "fleisch" | "fisch" | "vegetarisch" | "vegan";
 type Allergy = "gluten" | "laktose" | "nüsse" | "ei" | "soja";
@@ -71,7 +71,6 @@ export default function ProfilePage() {
   const [portionFactors, setPortionFactors] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
     loadHousehold();
   }, []);
 
@@ -363,8 +362,8 @@ export default function ProfilePage() {
       )}
 
       <div className="rounded-xl border border-sprossa-ink/10 bg-white p-6">
-        <h2 className="mb-2 font-display text-xl font-semibold text-sprossa-ink">🔑 Token</h2>
-        <p className="text-sm text-sprossa-muted">{localStorage.getItem(TOKEN_KEY) ? "✅ Eingeloggt" : "❌ Nicht eingeloggt"}</p>
+        <h2 className="mb-2 font-display text-xl font-semibold text-sprossa-ink">🔐 Authentifizierung</h2>
+        <p className="text-sm text-sprossa-muted">Session läuft über httpOnly-Cookie</p>
       </div>
     </section>
   );

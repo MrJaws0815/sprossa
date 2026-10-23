@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../../lib/auth";
+import { authHeaders, getApiBase } from "../../lib/auth";
 const dayNames = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 
 function currentMonthStr() {
@@ -21,7 +21,6 @@ export default function PlanPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
     loadData();
   }, []);
 

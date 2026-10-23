@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { authHeaders, getApiBase, TOKEN_KEY } from "../../../lib/auth";
+import { authHeaders, getApiBase } from "../../../lib/auth";
 
 const catLabels: Record<string, string> = {
   vegetables: "🥦 Gemüse", fruit: "🍎 Obst", meat: "🥩 Fleisch/Fisch", dairy: "🥛 Milchprodukte",
@@ -18,7 +18,6 @@ export default function RecipeDetailPage() {
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) { router.push("/login"); return; }
     fetch(`${getApiBase()}/recipes/${params.id}`, { headers: authHeaders() })
       .then(r => r.ok ? r.json() : null)
       .then(d => { setRecipe(d); setLoading(false); })
