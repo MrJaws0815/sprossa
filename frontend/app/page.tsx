@@ -94,7 +94,7 @@ export default function HomePage() {
               </button>
             </div>
             {/* DSGVO: Einwilligung, NICHT vorbelegt */}
-            <label className={`flex gap-[10px] items-start text-xs leading-[1.5] ${consentError ? "text-sprossa-error" : "text-sprossa-muted"}`}>
+            <label className={`touch-target flex gap-[10px] items-start text-xs leading-[1.5] ${consentError ? "text-sprossa-error" : "text-sprossa-muted"}`}>
               <input
                 type="checkbox"
                 checked={consent}

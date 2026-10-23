@@ -115,7 +115,7 @@ export default function GroceryPage() {
           <h2 className="mb-2 font-semibold text-sprossa-ink">{categoryLabels[cat] || cat}</h2>
           <ul className="space-y-1">
             {items.map((item: any) => (
-              <li key={item.id} className="flex items-center gap-3">
+              <li key={item.id} className="touch-target flex items-center gap-3">
                 <input type="checkbox" checked={checked[item.id] || false} onChange={() => { const s = {...checked}; if (s[item.id]) delete s[item.id]; else s[item.id] = true; setChecked(s); localStorage.setItem("grocery_checked_"+item.id, "1"); }} className="h-4 w-4 rounded border-sprossa-muted/30 text-sprossa-green cursor-pointer hover:border-sprossa-green" />
                 <span className="text-sm text-sprossa-ink">{item.ingredient_name || "Zutat"} ({item.quantity_total} {item.unit})</span>
               </li>

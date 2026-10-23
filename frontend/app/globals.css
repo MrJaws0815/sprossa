@@ -15,6 +15,27 @@
   --color-sprossa-error: #C0392B;
 }
 
+/* ─── BASE LAYER ─── */
+@layer base {
+  /* F5: Focus-Ringe für alle interaktiven Elemente */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-sprossa-green/50;
+  }
+
+  /* F8: Disabled-Elemente visuell zurücknehmen */
+  *:disabled {
+    opacity: 0.6;
+  }
+}
+
+/* ─── UTILITY KLASSEN ─── */
+@layer utilities {
+  /* F7: Touch-Ziele auf Mobile vergrössern (mind. 44×44 px) */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
 body {
   font-family: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
   color: #26302B;

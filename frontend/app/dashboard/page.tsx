@@ -18,6 +18,7 @@ export default function DashboardPage() {
   const [planCount, setPlanCount] = useState(0);
   const [weeklyMeals, setWeeklyMeals] = useState<{ day: string; meal: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -70,12 +71,30 @@ export default function DashboardPage() {
       }
     } catch (e) {
       console.error("Dashboard-Fehler", e);
+      setStats({ recipes: 0, weeksPlanned: 0, groceryItems: 0 });
+      setError(true);
     } finally {
       setLoading(false);
     }
   }
 
   if (loading) return <div className="p-8 text-center text-sprossa-muted">Lade Dashboard…</div>;
+
+  // Error-State (API-Fehler)
+  if (error) {
+    return (
+      <section className="py-8">
+        <div className="mx-auto max-w-lg rounded-xl border border-sprossa-error/30 bg-white p-8 text-center">
+          <p className="mb-4 text-xl text-sprossa-error font-bold">Dashboard-Daten konnten nicht geladen werden</p>
+          <p className="mb-6 text-sm text-sprossa-muted">Bitte ueberpruefe deine Internetverbindung und versuche es erneut.</p>
+          <button onClick={() => { setError(false); setLoading(true); loadDashboard(); }}
+            className="rounded-xl bg-sprossa-green px-6 py-3 font-bold text-white hover:bg-sprossa-dark">
+            Erneut versuchen
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-8">
@@ -111,6 +130,18 @@ export default function DashboardPage() {
           <div className="text-sm text-sprossa-muted">Einkaufs-Items</div>
         </a>
       </div>
+
+      {/* Empty-State: noch kein Monatsplan */}
+      {planCount === 0 && (
+        <div className="mb-8 rounded-xl border border-sprossa-ink/10 bg-sprossa-sage p-6 text-center">
+          <p className="text-lg font-semibold text-sprossa-ink">
+            📅 Noch kein Monatsplan –{" "}
+            <a href="/dashboard/plan" className="text-sprossa-green font-bold underline hover:text-sprossa-dark">
+              ersten Plan erstellen
+            </a>
+          </p>
+        </div>
+      )}
 
       <div className="mb-8 rounded-xl border border-sprossa-ink/10 bg-white p-6">
         <h2 className="mb-4 font-display text-xl font-semibold text-sprossa-ink">📅 Wochenvorschau</h2>

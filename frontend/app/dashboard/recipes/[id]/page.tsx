@@ -99,7 +99,7 @@ if (/\d+\.\s/.test(rawInstructions)) {
                 <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-sprossa-muted">{catLabels[cat] || cat}</h3>
                 <ul className="space-y-2">
                   {items.map((ing: any, i: number) => (
-                    <li key={i} className="flex items-center gap-3">
+                    <li key={i} className="touch-target flex items-center gap-3">
                       <input type="checkbox" checked={checked.has(i)} onChange={() => {
                         const s = new Set(checked);
                         s.has(i) ? s.delete(i) : s.add(i);

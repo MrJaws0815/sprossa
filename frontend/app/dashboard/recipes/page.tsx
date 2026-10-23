@@ -79,7 +79,7 @@ export default function RecipesPage() {
         <input type="search" placeholder="🔍 Rezept suchen…"
           value={search} onChange={(e) => setSearch(e.target.value)}
           className="flex-1 rounded-xl border border-sprossa-muted/20 px-4 py-3 text-sprossa-ink" />
-        <label className="flex items-center gap-2 text-sm text-sprossa-muted cursor-pointer">
+        <label className="touch-target flex items-center gap-2 text-sm text-sprossa-muted cursor-pointer">
           <input type="checkbox" checked={filterPlanned} onChange={(e) => setFilterPlanned(e.target.checked)}
             className="h-4 w-4 rounded border-sprossa-muted/30 text-sprossa-green" />
           Nur geplante Rezepte
