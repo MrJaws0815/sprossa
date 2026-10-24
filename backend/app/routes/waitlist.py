@@ -6,6 +6,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -20,6 +21,8 @@ class WaitlistSignupRequest(BaseModel):
     email: EmailStr
     name: Optional[str] = None
     household_size: Optional[int] = None
+    source: Optional[str] = None
+    utm_campaign: Optional[str] = None
 
 
 class WaitlistSignupResponse(BaseModel):
@@ -33,18 +36,27 @@ async def waitlist_signup(body: WaitlistSignupRequest, request: Request, db: Asy
     repo = WaitlistRepository(db)
     existing = await repo.get_by_email(body.email)
     if existing:
-        if existing.confirmed_at:
+        # Jede bereits existierende E-Mail → 409 (kein neuer Token, keine Doppel-Einträge).
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Diese E-Mail ist bereits auf der Warteliste.",
+        )
+    else:
+        try:
+            entry = await repo.create_entry(
+                email=body.email,
+                name=body.name,
+                household_size=body.household_size,
+                source=body.source,
+                utm_campaign=body.utm_campaign,
+            )
+        except IntegrityError:
+            # Race Condition: E-Mail wurde zwischen get_by_email und create_entry angelegt.
+            await db.rollback()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Diese E-Mail ist bereits auf der Warteliste.",
             )
-        entry = existing
-    else:
-        entry = await repo.create_entry(
-            email=body.email,
-            name=body.name,
-            household_size=body.household_size,
-        )
 
     token = generate_token()
     await repo.set_confirmation_token(entry.id, token)

@@ -57,5 +57,11 @@ class GroceryItemRepository(BaseRepository[GroceryItem]):
         super().__init__(session, GroceryItem)
 
     async def get_by_list(self, grocery_list_id: object) -> list[GroceryItem]:
-        """Alle Items einer Einkaufsliste."""
-        return await self.get_all(self.model_class.grocery_list_id == grocery_list_id)
+        """Alle Items einer Einkaufsliste – mit Ingredient eager geladen."""
+        stmt = (
+            select(GroceryItem)
+            .where(GroceryItem.grocery_list_id == grocery_list_id)
+            .options(selectinload(GroceryItem.ingredient))
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())

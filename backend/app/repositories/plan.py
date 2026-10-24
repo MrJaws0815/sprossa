@@ -41,7 +41,9 @@ class MonthlyPlanRepository(BaseRepository[MonthlyPlan]):
         stmt = (
             select(MonthlyPlan)
             .where(MonthlyPlan.id == plan_id)
-            .options(selectinload(MonthlyPlan.weekly_plans))
+            .options(
+                selectinload(MonthlyPlan.weekly_plans).selectinload(WeeklyPlan.meal_slots)
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()

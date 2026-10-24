@@ -14,7 +14,11 @@
       "veggie",
       "familie",
       "saisonal",
-      "meal_prep"
+      "meal_prep",
+      "deutsch",
+      "ei",
+      "laktose",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Linsen durch ein Sieb waschen und die weichen Kartoffelwürfel mit einem Plastikmesser schneiden.",
     "instructions": "1. Linsen in ein Sieb geben, kalt abspülen und abtropfen lassen.\n2. Zwiebel und Knoblauch fein würfeln, Karotten und Kartoffeln in 1-cm-Würfel schneiden.\n3. Rapsöl in einem großen Topf erhitzen. Zwiebeln und Knoblauch darin 3 Min. glasig dünsten.\n4. Karotten- und Kartoffelwürfel zugeben, 2 Min. mitbraten.\n5. Currypulver, Kurkuma und Garam Masala einrühren, 1 Min. anrösten.\n6. Mit Kokosmilch und 300 ml Wasser ablöschen. Linsen einrühren.\n7. Alles 25 Min. bei niedriger Hitze köcheln lassen, gelegentlich umrühren.\n8. Mit Salz, Pfeffer und einem Spritzer Zitronensaft abschmecken.\n9. Parallel den Reis nach Packungsanweisung kochen.\n10. Curry auf 4 Portionen verteilen, Reis dazu. Die Hälfte für die Reste-Bowl beiseitestellen.",
@@ -97,10 +101,14 @@
     "cook_once_eat_twice": false,
     "leftover_recipe_title": null,
     "tags": [
-      "vegetarisch",
       "veggie",
       "schnell",
-      "meal_prep"
+      "meal_prep",
+      "asiatisch",
+      "nuesse",
+      "fleisch",
+      "herbst",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Äpfel mit einem Apfelteiler in Spalten schneiden und die Walnüsse mit den Händen zerbröseln.",
     "instructions": "1. Die kalte Linsen-Curry-Reste aus dem Kühlschrank in eine große Schüssel geben.\n2. Apfel waschen, vierteln und in feine Spalten schneiden.\n3. Feldsalat gründlich waschen und trocken schleudern.\n4. Walnüsse in einer trockenen Pfanne kurz anrösten, bis sie duften.\n5. Alles mit der Linsen-Curry-Basis vermischen.\n6. Mit einem Schuss Apfelessig, Salz und Pfeffer abschmecken.\n7. Auf 4 Bowls verteilen und mit den Walnüssen toppen.",
@@ -151,7 +159,11 @@
       "vegetarisch",
       "saisonal",
       "familie",
-      "schnell"
+      "schnell",
+      "italienisch",
+      "laktose",
+      "veggie",
+      "herbst"
     ],
     "kid_friendly_tip": "Die Kinder können das Kürbisfruchtfleisch mit einem Löffel aus der Schale kratzen – das geht leichter als Schneidern und macht Spass.",
     "instructions": "1. Hokkaido-Kürbis waschen, halbieren, entkernen und in grobe Würfel schneiden (die Schale kann dranbleiben).\n2. Kartoffel schälen und würfeln, Zwiebel und Ingwer fein hacken.\n3. Rapsöl im Topf erhitzen, Zwiebel und Ingwer 2 Min. glasig dünsten.\n4. Kürbis- und Kartoffelwürfel zugeben, 5 Min. mitbraten.\n5. Mit Gemüsebrühe (500 ml Wasser + 2 TL Pulver) ablöschen.\n6. 20 Min. köcheln lassen, bis Kürbis und Kartoffeln weich sind.\n7. Topf vom Herd nehmen, Sahne einrühren und mit dem Stabmixer fein pürieren.\n8. Mit Salz, Pfeffer und einer Prise Muskat abschmecken.\n9. Die Hälfte der Suppe für die Kürbis-Pasta beiseitestellen.\n10. In Schüsseln anrichten, mit gerösteten Kürbiskernen bestreuen.",
@@ -219,7 +231,12 @@
       "vegetarisch",
       "schnell",
       "saisonal",
-      "familie"
+      "familie",
+      "italienisch",
+      "gluten",
+      "laktose",
+      "veggie",
+      "herbst"
     ],
     "kid_friendly_tip": "Die Kinder können den Parmesan mit einer kleinen Reibe selbst reiben – das trainiert die Feinmotorik.",
     "instructions": "1. Suppenreste aus dem Kühlschrank in einen Topf geben und bei mittlerer Hitze erwärmen.\n2. Spaghetti nach Packungsanweisung in Salzwasser kochen (10 Min.).\n3. 1–2 Kellen Nudelwasser zur Kürbissauce geben, bis sie sämig ist.\n4. Spaghetti abgießen und sofort mit der Sauce vermischen.\n5. Parmesan unterheben, mit Pfeffer und Muskat abschmecken.\n6. Auf Tellern anrichten und mit Parmesan bestreuen.",
@@ -257,7 +274,11 @@
       "cook_once",
       "fleisch",
       "familie",
-      "meal_prep"
+      "meal_prep",
+      "deutsch",
+      "ei",
+      "laktose",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Paprika entkernen (Handschuhe bei roten Paprika) und den Reis waschen – das ist wie Sandspiel.",
     "instructions": "1. Hähnchenbrustfilet in 2-cm-Stücke schneiden.\n2. Paprika und Zwiebeln in Streifen schneiden, Knoblauch hacken.\n3. Rapsöl in einer großen Pfanne erhitzen. Hähnchenstücke rundum kräftig anbraten (ca. 5 Min.).\n4. Herausnehmen und warm stellen.\n5. Zwiebeln, Paprika und Knoblauch im Bratrückstand 3 Min. braten.\n6. Currypulver, Kurkuma und Kreuzkümmel einrühren, 1 Min. anrösten.\n7. Kokosmilch dazugiessen, aufkochen und 10 Min. köcheln lassen.\n8. Hähnchen wieder zugeben, 5 Min. ziehen lassen.\n9. Reis parallel kochen. Mit Salz, Pfeffer und Zitronensaft abschmecken.\n10. Die Hälfte des Hähnchen-Currys für die Wraps beiseitestellen.",
@@ -336,7 +357,11 @@
     "tags": [
       "fleisch",
       "schnell",
-      "kinderfreundlich"
+      "kinderfreundlich",
+      "asiatisch",
+      "laktose",
+      "soja",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Wraps können die Kinder selbst belegen und zusammenrollen – jeder bereitet seinen eigenen Wrap zu.",
     "instructions": "1. Hähnchen-Curry-Reste aus dem Kühlschrank nehmen, ggf. grobe Stücke klein schneiden.\n2. Gurke längs in feine Streifen hobeln. Karotte schälen und in dünne Stifte schneiden.\n3. Rucola waschen und trocken schleudern.\n4. Tortilla-Wraps auf einem Teller ausbreiten.\n5. Hähnchen-Curry in die Mitte der Wraps geben.\n6. Mit Gurken-, Karottenstreifen und Rucola belegen.\n7. Frischkäse und ein paar Spritzer Sojasauce darübergeben.\n8. Wrap links und rechts einschlagen, dann von unten eng aufrollen.",
@@ -393,7 +418,12 @@
       "vegetarisch",
       "saisonal",
       "familie",
-      "kinderfreundlich"
+      "kinderfreundlich",
+      "laktose",
+      "veggie",
+      "vegan",
+      "herbst",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können das Gemüse auf dem Blech nach Farben sortieren – das macht das Anrichten zum Spiel.",
     "instructions": "1. Backofen auf 200 °C Ober-/Unterhitze vorheizen.\n2. Kürbis, Pastinaken und Brokkoli in mundgerechte Stücke schneiden.\n3. Paprika und Zucchini in breite Streifen schneiden.\n4. Alles Gemüse auf zwei Bleche verteilen, mit Olivenöl beträufeln.\n5. Mit Salz, Pfeffer, Thymian und Rosmarin würzen.\n6. 20 Min. backen, dann Feta in groben Stücken darüberbröseln.\n7. Weitere 10 Min. überbacken.\n8. Ein Blech für die Frittata beiseitestellen, das andere servieren.",
@@ -466,7 +496,11 @@
     "tags": [
       "vegetarisch",
       "schnell",
-      "familie"
+      "familie",
+      "italienisch",
+      "ei",
+      "laktose",
+      "veggie"
     ],
     "kid_friendly_tip": "Die Kinder können die Eier aufschlagen und mit einem Schneebesen verquirlen – das macht ihnen immer Spass.",
     "instructions": "1. Backofen auf 180 °C vorheizen.\n2. Reste vom Ofen-Gemüse auf einer ofenfesten Form verteilen.\n3. In einer Schüssel 6 Eier mit 100 ml Milch verquirlen, Salz und Pfeffer zugeben.\n4. Eiermischung gleichmässig über das Gemüse giessen.\n5. Parmesan darüberstreuen.\n6. 15 Min. backen, bis die Frittata gestockt und goldbraun ist.\n7. In Stücke geschnitten servieren. Dazu passt ein grüner Salat.",
@@ -505,7 +539,12 @@
       "vegan",
       "familie",
       "meal_prep",
-      "saisonal"
+      "saisonal",
+      "ei",
+      "vegetarisch",
+      "veggie",
+      "herbst",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Bohnen aus der Dose in ein Sieb schütten und abspülen – einfache Küchenarbeit, die Spass macht.",
     "instructions": "1. Zwiebeln, Knoblauch und Paprika fein würfeln.\n2. Rapsöl im Topf erhitzen, Zwiebeln und Knoblauch 3 Min. glasig dünsten.\n3. Paprika und Chilischote (fein gehackt) zugeben, 3 Min. mitbraten.\n4. Tomatenmark und Räucherpaprikapulver einrühren, 1 Min. anrösten.\n5. Mit stückigen Tomaten und 200 ml Wasser ablöschen.\n6. Bohnen und Mais abgiessen, kalt abspülen und unterrühren.\n7. Chili 20 Min. leise köcheln lassen.\n8. Mit Kreuzkümmel, Oregano, Salz, Pfeffer und einem Schuss Apfelessig abschmecken.\n9. Die Hälfte für die Chili-Mais-Pfanne beiseitestellen.",
@@ -590,7 +629,10 @@
     "tags": [
       "vegan",
       "schnell",
-      "familie"
+      "familie",
+      "vegetarisch",
+      "veggie",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Avocado mit einem Löffel aus der Schale löffeln und zerdrücken.",
     "instructions": "1. Chili-Reste in einer Pfanne bei mittlerer Hitze erwärmen.\n2. Avocado halbieren, Kern entfernen, Fruchtfleisch in Würfel schneiden.\n3. Chili auf Teller verteilen, Avocado-Würfel daraufgeben.\n4. Mit Koriander und einem Spritzer Limettensaft abschmecken.\n5. Dazu Tortilla-Chips oder Brot reichen.",
@@ -629,7 +671,13 @@
       "fleisch",
       "familie",
       "kinderfreundlich",
-      "schnell"
+      "schnell",
+      "deutsch",
+      "ei",
+      "gluten",
+      "laktose",
+      "herbst",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Karotten mit einer Kinderreibe in die Sauce raspeln – das Gemüse wird so fein, dass sie es später nicht erkennen.",
     "instructions": "1. Zwiebeln, Knoblauch fein würfeln. Karotte und Stangensellerie fein raspeln.\n2. Olivenöl in einem grossen Topf erhitzen. Hackfleisch darin kräftig anbraten, bis es krümelig ist (ca. 5 Min.).\n3. Zwiebeln, Knoblauch, Karotte und Sellerie zugeben, 3 Min. mitbraten.\n4. Tomatenmark einrühren, 1 Min. anrösten.\n5. Mit passierten Tomaten ablöschen. Oregano, Thymian und Lorbeerblatt zugeben.\n6. Sauce 20 Min. bei niedriger Hitze köcheln lassen.\n7. Spaghetti nach Packungsanweisung kochen.\n8. Sauce mit Salz und Pfeffer abschmecken, Lorbeerblatt entfernen.\n9. Spaghetti mit Sauce servieren, Parmesan darüberstreuen.",
@@ -727,7 +775,10 @@
       "fleisch",
       "schnell",
       "familie",
-      "kinderfreundlich"
+      "kinderfreundlich",
+      "ei",
+      "soja",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Brokkoli-Röschen mit den Fingern vom Strunk zupfen – das geht schnell und macht den Gemüsepicking zum Spiel.",
     "instructions": "1. Hähnchenbrustfilet in dünne Streifen schneiden.\n2. Brokkoli in Röschen teilen. Paprika und Zucchini in Streifen schneiden.\n3. Rapsöl im Wok oder einer grossen Pfanne erhitzen.\n4. Hähnchenstreifen scharf anbraten, dann herausnehmen.\n5. Brokkoli, Paprika und Zucchini 4 Min. im Wok braten.\n6. Hähnchen wieder zugeben, Sojasauce und 2 EL Wasser angiessen.\n7. 3 Min. fertiggaren, mit Salz und Pfeffer abschmecken.\n8. Dazu Reis servieren.",
@@ -788,7 +839,12 @@
     "tags": [
       "fleisch",
       "saisonal",
-      "familie"
+      "familie",
+      "deutsch",
+      "ei",
+      "laktose",
+      "herbst",
+      "winter"
     ],
     "kid_friendly_tip": "Die Kinder können den Rotkohl zu einem Apfel-Rotkohl-Salat umfunktionieren: einfach kalt mit Apfelsaft und Rosinen mischen.",
     "instructions": "1. Rotkohl vierteln, Strunk entfernen, in feine Streifen hobeln oder schneiden.\n2. Apfel schälen, vierteln und in Spalten schneiden.\n3. Rapsöl im Topf erhitzen, Rotkohl und Apfel zugeben.\n4. Mit Apfelessig und 200 ml Wasser ablöschen, Lorbeerblatt zugeben.\n5. Rotkohl 30 Min. bei niedriger Hitze köcheln lassen, gelegentlich umrühren.\n6. Für den Stampf: Kartoffeln schälen, in Salzwasser 20 Min. kochen.\n7. Schweinefilet in 2 cm dicke Medaillons schneiden, salzen und pfeffern.\n8. Butter in Pfanne erhitzen, Filet von jeder Seite 3 Min. braten, dann 10 Min. bei 150 °C im Ofen fertiggaren.\n9. Kartoffeln abgiessen, mit Milch, Butter und Salz stampfen.\n10. Filet in Scheiben schneiden, mit Rotkohl und Stampf anrichten.",
@@ -861,7 +917,13 @@
     "tags": [
       "fleisch",
       "familie",
-      "kinderfreundlich"
+      "kinderfreundlich",
+      "deutsch",
+      "ei",
+      "gluten",
+      "laktose",
+      "winter",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Frikadellen-Masse mit den Händen zu kleinen Bällchen formen – wie Knete, nur essbar.",
     "instructions": "1. Für den Gurkensalat: Gurke schälen, in dünne Scheiben hobeln.\n2. Mit 2 EL Essig, 1 EL Öl, Salz, Pfeffer und Düll mischen. Ziehen lassen.\n3. Kartoffeln schälen, in Salzwasser 20 Min. kochen.\n4. Für die Frikadellen: Brötchen von gestern in lauwarmem Wasser einweichen.\n5. Hackfleisch, ausgedrücktes Brötchen, Ei, fein gewürfelte Zwiebel, Senf und Majoran in einer Schüssel mischen.\n6. Mit Salz und Pfeffer würzen, alles gut durchkneten.\n7. Aus der Masse 8 flache Frikadellen formen.\n8. Rapsöl in einer Pfanne erhitzen, Frikadellen 5–6 Min. pro Seite goldbraun braten.\n9. Kartoffeln abgiessen, mit Milch, Butter und Salz stampfen.\n10. Frikadellen mit Stampf und Gurkensalat servieren.",
@@ -953,7 +1015,12 @@
       "cook_once",
       "fleisch",
       "meal_prep",
-      "familie"
+      "familie",
+      "deutsch",
+      "gluten",
+      "winter",
+      "sommer",
+      "frühling"
     ],
     "kid_friendly_tip": "Die Kinder können die Kichererbsen aus der Dose spülen und die Couscous-Quellwasser-Menge abmessen.",
     "instructions": "1. Zwiebeln und Knoblauch fein würfeln, Ingwer reiben.\n2. Rapsöl im Tajine oder Schmortopf erhitzen. Lammgulasch portionsweise scharf anbraten.\n3. Zwiebeln, Knoblauch und Ingwer zugeben, 3 Min. dünsten.\n4. Kreuzkümmel, Koriander, Kurkuma und Zimt einrühren, 1 Min. anrösten.\n5. Mit stückigen Tomaten ablöschen, Kichererbsen zugeben.\n6. 45 Min. bei kleiner Flamme köcheln lassen, ab und zu umrühren.\n7. Couscous nach Packungsanweisung zubereiten.\n8. Tajine mit Salz und Pfeffer abschmecken.\n9. Couscous auf tiefen Tellern verteilen, Tajine darauf anrichten.",
@@ -1044,7 +1111,12 @@
     "tags": [
       "fisch",
       "schnell",
-      "familie"
+      "familie",
+      "deutsch",
+      "ei",
+      "soja",
+      "fleisch",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Bowl zusammenstellen: jede Zutat kommt in eine eigene ‚Ecke' der Schüssel.",
     "instructions": "1. Reis nach Packungsanweisung kochen, abkühlen lassen.\n2. Lachsfilet in 4 Stücke schneiden, mit Salz und Pfeffer würzen.\n3. Sesamöl in einer beschichteten Pfanne erhitzen.\n4. Lachs von jeder Seite 2 Min. scharf anbraten, dann 5 Min. bei reduzierter Hitze fertig garen.\n5. Avocado halbieren, Kern entfernen, in Spalten schneiden.\n6. Gurke in feine Halbmonde hobeln.\n7. Feldsalat waschen und trocken schleudern.\n8. Für das Dressing: Sojasauce, Sesamöl, Limettensaft und Honig verrühren.\n9. Reis in 4 Bowls verteilen. Lachs, Avocado, Gurke und Salat darauf anrichten.\n10. Dressing über die Bowls träufeln und mit Sesam bestreuen.",
@@ -1118,7 +1190,11 @@
       "fisch",
       "kinderfreundlich",
       "familie",
-      "schnell"
+      "schnell",
+      "deutsch",
+      "ei",
+      "gluten",
+      "laktose"
     ],
     "kid_friendly_tip": "Die Kinder können die Fischstäbchen auf dem Auflauf wie Legosteine anordnen – in Reihen oder im Zickzack.",
     "instructions": "1. Backofen auf 200 °C Ober-/Unterhitze vorheizen.\n2. Kartoffeln schälen, in Salzwasser 20 Min. kochen.\n3. TK-Erbsen in einer Schüssel mit heissem Wasser auftauen lassen.\n4. Für die Sauce: Butter in einem Topf schmelzen. Mehl einrühren, 1 Min. anschwitzen.\n5. Milch unter Rühren angiessen, aufkochen. TK-Spinat unterrühren, bis er schmilzt.\n6. Sauce mit Salz, Pfeffer und Muskat abschmecken.\n7. Kartoffeln abgiessen, mit Butter und Milch stampfen.\n8. Stampf in eine ofenfeste Form geben, Erbsen darauf verteilen.\n9. Fischstäbchen in die Sauce tauchen und auf dem Stampf anordnen.\n10. Restliche Sauce darübergeben. 15 Min. überbacken.",
@@ -1181,7 +1257,12 @@
       "vegetarisch",
       "familie",
       "kinderfreundlich",
-      "meal_prep"
+      "meal_prep",
+      "ei",
+      "gluten",
+      "laktose",
+      "nuesse",
+      "veggie"
     ],
     "kid_friendly_tip": "Die Kinder können beim Schichten der Lasagne helfen: Eine Schicht Nudelblätter, eine Schicht Füllung – wie beim Hausbau.",
     "instructions": "1. Backofen auf 180 °C (Umluft) vorheizen.\n2. Zwiebel und Knoblauch fein würfeln. TK-Spinat auftauen lassen.\n3. Butter in einem Topf erhitzen, Zwiebel und Knoblauch darin glasig dünsten.\n4. Spinat zugeben, 5 Min. dünsten, bis die Flüssigkeit verdampft ist.\n5. Ricotta (oder Quark) und Parmesan unterrühren. Mit Salz, Pfeffer und Muskat würzen.\n6. 200 ml Sahne angiessen und einmal aufkochen.\n7. Eine Auflaufform einfetten. Abwechselnd Lasagneblätter, Spinatfüllung und Sahne schichten.\n8. Abschliessend mit einer Schicht Béchamel: 30 g Butter, 30 g Mehl, 300 ml Milch.\n9. Pinienkerne darüberstreuen. 30 Min. backen, dann 5 Min. ruhen lassen.",
@@ -1267,7 +1348,12 @@
       "vegetarisch",
       "kinderfreundlich",
       "familie",
-      "schnell"
+      "schnell",
+      "italienisch",
+      "gluten",
+      "laktose",
+      "veggie",
+      "winter"
     ],
     "kid_friendly_tip": "Die Kinder können die Kruste aus Paniermehl und Parmesan mit den Fingern auf dem Gratin verstreuen.",
     "instructions": "1. Backofen auf 200 °C Ober-/Unterhitze vorheizen.\n2. Brokkoli in Röschen teilen, 3 Min. in Salzwasser blanchieren, abgiessen.\n3. Sahne, Frischkäse und Gouda in einem Topf schmelzen, mit Salz, Pfeffer und Muskat würzen.\n4. Brokkoli in eine ofenfeste Form geben, Sauce darübergiessen.\n5. Paniermehl mit Parmesan mischen, über den Auflauf streuen.\n6. Butter in Flöckchen daraufsetzen.\n7. 20 Min. goldbraun überbacken. Heiss servieren.",
@@ -1328,7 +1414,13 @@
     "tags": [
       "vegetarisch",
       "saisonal",
-      "familie"
+      "familie",
+      "italienisch",
+      "ei",
+      "laktose",
+      "veggie",
+      "herbst",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Champignons mit einem feuchten Tuch putzen – nicht waschen, sonst saugen sie sich voll.",
     "instructions": "1. Champignons putzen und in Scheiben schneiden. Porree in feine Ringe schneiden.\n2. Rapsöl in einer weiten Pfanne erhitzen, Champignons kräftig anbraten.\n3. Porree zugeben, 2 Min. mitbraten. Herausnehmen, warm stellen.\n4. Butter im gleichen Topf schmelzen, Risottoreis darin 2 Min. anschwitzen.\n5. Mit 200 ml Wasser und Gemüsebrühe ablöschen, 25 Min. leise köcheln.\n6. Pilze und Porree wieder unterheben, Parmesan einrühren.\n7. Mit Salz, Pfeffer und Thymian abschmecken.\n8. Mit Parmesan und Kürbiskernen bestreut servieren.",
@@ -1402,7 +1494,13 @@
       "cook_once",
       "vegetarisch",
       "familie",
-      "schnell"
+      "schnell",
+      "deutsch",
+      "laktose",
+      "veggie",
+      "vegan",
+      "herbst",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können nach Belieben weiteres Gemüse in den Auflauf legen – was im Kühlschrank noch übrig ist darf rein.",
     "instructions": "1. Backofen auf 200 °C vorheizen.\n2. Kartoffeln schälen und in 1-cm-Scheiben schneiden. Zucchini und Paprika in Stücke schneiden.\n3. Champignons putzen und halbieren.\n4. Alles Gemüse in eine Auflaufform geben.\n5. Crème fraîche mit 2 EL Wasser, Salz, Pfeffer und einer Prise Muskat verrühren.\n6. Sauce über das Gemüse giessen, Gouda darüberstreuen.\n7. 30 Min. backen. Heiss servieren – ein grüner Salat passt gut dazu.",
@@ -1458,7 +1556,11 @@
       "vegetarisch",
       "kinderfreundlich",
       "familie",
-      "schnell"
+      "schnell",
+      "laktose",
+      "veggie",
+      "winter",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Blumenkohl-Wedges wie Pommes in den Dip tunken – das macht den Gemüseesser zum Erlebnis.",
     "instructions": "1. Backofen auf 200 °C vorheizen. Blech mit Backpapier belegen.\n2. Blumenkohl in 2-cm-dicke Spalten schneiden (inklusive Strunk).\n3. Olivenöl mit Paprikapulver, Salz, Pfeffer und Chili mischen.\n4. Blumenkohl-Spalten mit der Gewürzmischung beträufeln, gut vermengen.\n5. Auf dem Blech verteilen, 25 Min. backen, nach 15 Min. wenden.\n6. Für den Dip: Joghurt, Frischkäse, Zitronensaft, Salz und gehackte Kräuter verrühren.\n7. Heisse Wedges mit Dip servieren.",
@@ -1526,7 +1628,12 @@
       "vegetarisch",
       "schnell",
       "saisonal",
-      "familie"
+      "familie",
+      "deutsch",
+      "veggie",
+      "vegan",
+      "herbst",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Granatapfel-Kerne aus der Schale pulen – das ist eine feine Fingerübung.",
     "instructions": "1. Backofen auf 200 °C vorheizen.\n2. Süßkartoffeln waschen, in dicke Spalten schneiden, mit Olivenöl beträufeln.\n3. Süßkartoffeln 25 Min. im Ofen backen.\n4. Feldsalat waschen, trocken schleudern.\n5. Avocado halbieren, in Spalten schneiden. Granatapfel vierteln, Kerne herauslösen.\n6. Für das Dressing: Tahini, Zitronensaft, Honig, Salz und 2 EL Wasser verrühren.\n7. Süßkartoffeln auf 4 Bowls verteilen. Feldsalat, Avocado und Granatapfel darauf anrichten.\n8. Dressing darüberträufeln. Mit Kürbiskernen bestreuen.",
@@ -1601,7 +1708,10 @@
       "vegan",
       "schnell",
       "saisonal",
-      "familie"
+      "familie",
+      "deutsch",
+      "vegetarisch",
+      "veggie"
     ],
     "kid_friendly_tip": "Die Kinder können das Räuchertofu mit den Händen in Stücke bröseln – die brüchige Konsistenz macht Spass.",
     "instructions": "1. Kartoffeln schälen und in kleine Würfel schneiden. Lauch in feine Ringe, Karotten in Scheiben schneiden.\n2. Rapsöl im Topf erhitzen. Lauch und Karotten 2 Min. andünsten.\n3. Kartoffelwürfel zugeben, 2 Min. mitbraten.\n4. Mit 800 ml Wasser und Gemüsebrühe ablöschen. 20 Min. köcheln lassen.\n5. Räuchertofu in kleine Würfel schneiden, in einer Pfanne knusprig braten.\n6. Suppe mit Salz, Pfeffer, Majoran und Prise Muskat abschmecken.\n7. Räuchertofu in die Suppe geben oder als Topping servieren.",
@@ -1655,11 +1765,14 @@
     "leftover_recipe_title": null,
     "tags": [
       "cook_once",
-      "vegan",
       "veggie",
       "familie",
       "kinderfreundlich",
-      "schnell"
+      "schnell",
+      "italienisch",
+      "gluten",
+      "fleisch",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Linsen vor dem Kochen nach 'schönen und weniger schönen' sortieren – ein einfaches Farberkennungsspiel.",
     "instructions": "1. Linsen in einem Sieb kalt abspülen, abtropfen lassen.\n2. Zwiebeln und Knoblauch fein würfeln. Karotte fein raspeln.\n3. Olivenöl im Topf erhitzen. Zwiebeln und Knoblauch 3 Min. glasig dünsten.\n4. Karotte und Tomatenmark einrühren, 1 Min. anrösten.\n5. Linsen zugeben, mit passierten Tomaten und 200 ml Wasser ablöschen.\n6. Oregano, Thymian und Lorbeerblatt zugeben. 25 Min. köcheln lassen.\n7. Spaghetti nach Packungsanweisung kochen.\n8. Sauce mit Salz, Pfeffer und Hefeflocken abschmecken.\n9. Lorbeerblatt entfernen. Sauce zu den Spaghetti geben.",
@@ -1750,7 +1863,10 @@
     "tags": [
       "vegan",
       "schnell",
-      "familie"
+      "familie",
+      "vegetarisch",
+      "veggie",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Minzeblätter von den Stielen zupfen – der Duft an den Fingern ist der Lohn.",
     "instructions": "1. Kichererbsen in ein Sieb abgiessen, kalt abspülen, abtropfen lassen.\n2. Gurke schälen und würfeln. Tomaten und Zwiebel fein würfeln.\n3. Petersilie und Minze hacken.\n4. Alles in einer Schüssel mischen.\n5. Dressing: Olivenöl, Zitronensaft, Kreuzkümmel, Salz und Pfeffer verrühren.\n6. Dressing über den Salat giessen, gut vermengen.\n7. 10 Min. ziehen lassen, dann servieren.",
@@ -1811,7 +1927,12 @@
     "tags": [
       "fisch",
       "schnell",
-      "familie"
+      "familie",
+      "italienisch",
+      "gluten",
+      "laktose",
+      "fleisch",
+      "sommer"
     ],
     "kid_friendly_tip": "Die Kinder können die Haut von den Makrelenfilets abziehen – das geht leicht und fühlt sich an wie ‚Fisch pellen'.",
     "instructions": "1. Pasta in Salzwasser nach Packungsanweisung kochen.\n2. Räuchermakrelenfilets häuten und mit den Fingern in kleine Stücke zupfen.\n3. Olivenöl in einer Pfanne erhitzen, Cherrytomaten halbieren und anbraten.\n4. Crème fraîche einrühren, Makrelenstücke unterheben.\n5. Mit Salz, Pfeffer und etwas Zitronensaft abschmecken.\n6. Pasta abgiessen und mit der Sauce vermischen.",
@@ -1869,7 +1990,11 @@
       "schnell",
       "kinderfreundlich",
       "familie",
-      "saisonal"
+      "saisonal",
+      "deutsch",
+      "veggie",
+      "herbst",
+      "winter"
     ],
     "kid_friendly_tip": "Die Kinder können die Würstchen mit den Händen in Scheiben brechen – das kracht lustig und ist viel einfacher als Schneidern.",
     "instructions": "1. Kartoffeln und Pastinaken schälen, in 1-cm-Würfel schneiden.\n2. Karotten in Scheiben, Lauch in Ringe schneiden.\n3. Rapsöl im Topf erhitzen, das ganze Gemüse 3 Min. dünsten.\n4. Mit 800 ml Wasser ablöschen, Gemüsebrühe einrühren.\n5. 15 Min. leise köcheln lassen.\n6. Würstchen in Scheiben schneiden und in den Eintopf geben.\n7. Mit Salz, Pfeffer, Majoran und einer Prise Muskat abschmecken.\n8. 2 Min. ziehen lassen (nicht mehr kochen, sonst platzen die Würstchen).",

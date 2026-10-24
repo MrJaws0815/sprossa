@@ -8,11 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user_id
+from app.core.ownership import require_household, get_user_households
 from app.repositories.household import HouseholdRepository
 from app.repositories.member import MemberRepository
 from app.schemas.api import HouseholdCreate, HouseholdOut, HouseholdUpdate, MemberCreate, MemberOut
 
-router = APIRouter(tags=["households"], dependencies=[Depends(get_current_user_id)])
+# Kein router-level dependency: sync-Dep vor async DB-Writes verursacht MissingGreenlet.
+# Jede Route deklariert get_current_user_id selbst.
+router = APIRouter(tags=["households"])
 
 
 @router.post("/households", response_model=HouseholdOut, status_code=201)
@@ -44,9 +47,7 @@ async def update_household(
 ):
     """Aktualisiert einen Household (Name, Dietary-Profile)."""
     repo = HouseholdRepository(db)
-    household = await repo.get(hid)
-    if not household:
-        raise HTTPException(status_code=404, detail="Household not found")
+    household = await require_household(db, user_id, hid)  # IDOR-Schutz
 
     updates = {}
     if body.name is not None:
@@ -71,8 +72,7 @@ async def list_households(
     db: AsyncSession = Depends(get_db),
 ):
     """Listet alle Households des aktuellen Users."""
-    repo = HouseholdRepository(db)
-    households = await repo.get_by_owner(UUID(user_id))
+    households = await get_user_households(db, user_id)
     return [
         HouseholdOut(
             id=h.id,
@@ -90,10 +90,7 @@ async def get_household(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    repo = HouseholdRepository(db)
-    household = await repo.get(hid)
-    if not household:
-        raise HTTPException(status_code=404, detail="Household not found")
+    household = await require_household(db, user_id, hid)  # IDOR-Schutz
     return HouseholdOut(
         id=household.id,
         name=household.name,
@@ -109,10 +106,7 @@ async def create_member(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    hrepo = HouseholdRepository(db)
-    household = await hrepo.get(hid)
-    if not household:
-        raise HTTPException(status_code=404, detail="Household not found")
+    household = await require_household(db, user_id, hid)  # IDOR-Schutz
 
     mrepo = MemberRepository(db)
     member = await mrepo.create(
@@ -144,10 +138,7 @@ async def list_members(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    hrepo = HouseholdRepository(db)
-    household = await hrepo.get(hid)
-    if not household:
-        raise HTTPException(status_code=404, detail="Household not found")
+    household = await require_household(db, user_id, hid)  # IDOR-Schutz
 
     mrepo = MemberRepository(db)
     members = await mrepo.get_by_household(hid)
@@ -174,10 +165,7 @@ async def delete_member(
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    hrepo = HouseholdRepository(db)
-    household = await hrepo.get(hid)
-    if not household:
-        raise HTTPException(status_code=404)
+    household = await require_household(db, user_id, hid)  # IDOR-Schutz
 
     mrepo = MemberRepository(db)
     member = await mrepo.get(mid)

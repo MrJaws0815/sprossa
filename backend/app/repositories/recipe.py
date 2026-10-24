@@ -20,7 +20,9 @@ class RecipeRepository(BaseRepository[Recipe]):
         stmt = (
             select(Recipe)
             .where(Recipe.id == recipe_id)
-            .options(selectinload(Recipe.ingredients))
+            .options(
+                selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient)
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()

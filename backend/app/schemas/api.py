@@ -67,7 +67,7 @@ class HouseholdOut(BaseModel):
 
 class MemberCreate(BaseModel):
     name: str
-    age: Optional[int] = None
+    age: Optional[int] = Field(default=None, ge=0, le=120)
     weight_kg: Optional[float] = None
     allergies: Optional[list[str]] = []
     dietary_goals: Optional[dict] = {}
@@ -135,6 +135,16 @@ class RecipeCreate(BaseModel):
     ingredients: list[RecipeIngredientCreate] = []
 
 
+class RecipeIngredientOut(BaseModel):
+    id: UUID
+    ingredient_id: UUID
+    ingredient_name: Optional[str] = None
+    quantity: float
+    unit: str
+    is_optional: bool = False
+    substitution_note: Optional[str] = None
+
+
 class RecipeOut(BaseModel):
     id: UUID
     title: str
@@ -146,6 +156,7 @@ class RecipeOut(BaseModel):
     kid_friendly_tip: Optional[str] = None
     cook_once_eat_twice: bool
     tags: Optional[list[str]] = []
+    ingredients: list[RecipeIngredientOut] = []
     created_at: datetime
 
     class Config:
@@ -207,6 +218,7 @@ class WeeklyPlanOut(BaseModel):
     id: UUID
     week_number: int
     start_date: Optional[date] = None
+    cw: Optional[int] = None  # Kalenderwoche (ISO), vom Backend berechnet
     meal_slots: list[MealSlotOut] = []
     notes: Optional[str] = None
 

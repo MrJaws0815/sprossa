@@ -34,10 +34,17 @@ export default function HomePage() {
 
     setSending(true);
     try {
+      const params = new URLSearchParams(window.location.search);
+      const utmSource = params.get("utm_source") || "organic";
+      const utmCampaign = params.get("utm_campaign");
       const res = await fetch("/api/v1/waitlist/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({
+          email: email.trim(),
+          source: utmSource,
+          utm_campaign: utmCampaign,
+        }),
       });
       const json = await res.json();
       setStatusMsg(json.message || "✅ Danke – du bist auf der Liste!");

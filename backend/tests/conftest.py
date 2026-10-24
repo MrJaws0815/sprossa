@@ -1,4 +1,10 @@
 """Pytest-Konfiguration und gemeinsame Fixtures"""
+import os
+
+# Muss VOR dem Import der App-Module gesetzt sein, damit die DB-Engine
+# mit NullPool (frische Connection pro Event-Loop) erzeugt wird.
+os.environ.setdefault("MM_TESTING", "true")
+
 import uuid
 
 import pytest

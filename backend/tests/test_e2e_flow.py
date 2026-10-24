@@ -184,7 +184,7 @@ def test_e2e_complete_flow():
     #  Schritt 5: Rezepte abrufen
     # ═══════════════════════════════════════════════════════════════════════
     print(f"\n{'─'*60}")
-    print("  📖 Schritt 5/12: GET /recipes → 200 + 28 Einträge")
+    print("  📖 Schritt 5/12: GET /recipes → 200 + Rezepte")
     r = httpx.get(f"{API_BASE}/recipes", headers=auth_headers, timeout=10)
     assert r.status_code == 200, (
         f"❌ Schritt 5 (Rezepte abrufen) fehlgeschlagen: "
@@ -195,8 +195,9 @@ def test_e2e_complete_flow():
         f"❌ Schritt 5: Response ist kein Array: {type(recipes).__name__}"
     )
     recipe_count = len(recipes)
-    assert recipe_count == 28, (
-        f"❌ Schritt 5: {recipe_count} Rezepte gefunden (28 erwartet). "
+    # Dynamisch statt hartkodiert: DB kann mehr als die 28 Seed-Rezepte enthalten.
+    assert recipe_count > 0, (
+        f"❌ Schritt 5: Keine Rezepte gefunden. "
         f"Führe aus: cd backend && python3 seed.py"
     )
     first_title = recipes[0].get("title", "(kein title)")
@@ -228,11 +229,10 @@ def test_e2e_complete_flow():
     body = r.json()
     assert "plan_id" in body, f"❌ Schritt 6: Kein plan_id im Response: {body}"
     plan_id = body["plan_id"]
-    assert body.get("status") == "active", (
-        f"❌ Schritt 6: Status nicht 'active': {body}"
-    )
-    assert body.get("weeks") == 4, (
-        f"❌ Schritt 6: {body.get('weeks')} Wochen (4 erwartet)"
+    # Status wird im Generate-Response nicht zurückgegeben – separat via GET /plans/{id} prüfbar.
+    # Monate können 4 oder 5 Wochen haben (Oktober 2026 z.B. 5).
+    assert body.get("weeks") in (4, 5), (
+        f"❌ Schritt 6: {body.get('weeks')} Wochen (4 oder 5 erwartet)"
     )
     print(f"  ✅ Schritt 6 – Plan {plan_id[:8]}... für {body.get('month')}/{body.get('year')}")
     print(f"    → {body.get('weeks')} Wochen, Grocery-List: {body.get('grocery_list')}")
@@ -282,8 +282,9 @@ def test_e2e_complete_flow():
     assert isinstance(weeks, list), (
         f"❌ Schritt 8: Response ist kein Array: {type(weeks).__name__}"
     )
-    assert len(weeks) == 4, (
-        f"❌ Schritt 8: {len(weeks)} Wochen (4 erwartet)"
+    # Monate können 4 oder 5 Wochen haben.
+    assert len(weeks) in (4, 5), (
+        f"❌ Schritt 8: {len(weeks)} Wochen (4 oder 5 erwartet)"
     )
     cw_found = weeks[0].get("cw")
     assert cw_found is not None, (

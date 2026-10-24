@@ -34,13 +34,16 @@ class WaitlistRepository(BaseRepository[WaitlistEntryModel]):
         return await self.get_by_field("confirmation_token", token)
 
     async def create_entry(
-        self, email: str, name: str | None = None, household_size: int | None = None
+        self, email: str, name: str | None = None, household_size: int | None = None,
+        source: str | None = None, utm_campaign: str | None = None
     ) -> WaitlistEntryModel:
         """Legt einen neuen Wartelisten-Eintrag an."""
         return await self.create(
             email=email,
             name=name,
             household_size=household_size,
+            source=source,
+            utm_campaign=utm_campaign,
         )
 
     async def confirm(self, email: str) -> Optional[WaitlistEntryModel]:

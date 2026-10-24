@@ -266,4 +266,6 @@ class WaitlistEntryModel(Base):
     confirmation_token: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, index=True)
     confirmation_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     confirmed_ip: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_campaign: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

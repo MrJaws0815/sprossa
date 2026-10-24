@@ -19,6 +19,7 @@ from datetime import date, timedelta
 from typing import Optional
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -456,26 +457,30 @@ async def generate_and_persist_monthly_plan(
     recipe_repo = RecipeRepository(db)
     recipe_map: dict[UUID, Recipe] = {}
 
-    # Rezepte MIT ingredients eager laden
+    # Rezept-Katalog ist GLOBAL (nicht haushaltsgebunden): alle Rezepte,
+    # ingredients + ingredient eager geladen. Kein Lazy-Load im Sync-Kontext
+    # (sonst MissingGreenlet), kein stiller Fallback auf ungefilterte Rezepte.
     stmt = (
         select(Recipe)
-        .where(Recipe.household_id == config.household_id)
         .options(selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient))
     )
     result = await db.execute(stmt)
     all_recipes = list(result.scalars().all())
     recipe_map = {r.id: r for r in all_recipes}
 
-    if not all_recipes:
-        # Fallback auf recipe_repo.get_all()
-        all_recipes = await recipe_repo.get_all()
-        recipe_map = {r.id: r for r in all_recipes}
-
     # ── Schritt 1: Ess-Typ-Filter (Task 16) ──
     if config.dietary_profile:
         filtered = _filter_by_diet(all_recipes, config.dietary_profile)
     else:
         filtered = all_recipes
+
+    # Sicherheitsfilter (Diet/Allergen/Focus): NIE auf all_recipes zurückfallen.
+    # Lieber ein klarer 400er als ein unpassender Plan.
+    if not filtered:
+        raise HTTPException(
+            status_code=400,
+            detail="Keine Rezepte für das gewählte Ernährungsprofil gefunden. Bitte passe das Profil an.",
+        )
 
     # ── Schritt 2: Allergen-Prüfung (Task 17) ──
     member_allergies: list[str] = []
@@ -490,18 +495,36 @@ async def generate_and_persist_monthly_plan(
             filtered, member_allergies,
             ing_id_to_name, ing_id_to_cat, recipe_ing_ids,
         )
+        if not filtered:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Keine Rezepte für die Allergene {member_allergies} gefunden. Bitte passe die Allergien an.",
+            )
+
+    # ── Schritt 2b: Fokus-Tags (Task 51) ──
+    if config.focus_tags:
+        focus_set = {t.lower().strip() for t in config.focus_tags if t}
+        filtered = [
+            r for r in filtered
+            if focus_set & {t.lower().strip() for t in (r.tags or [])}
+        ]
+        if not filtered:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Keine Rezepte für die Fokustags {config.focus_tags} gefunden. Bitte passe die Fokustags an.",
+            )
 
     # ── Schritt 3: Abwechslungs-Rad (Task 19) ──
+    # Nur der Abwechslungs-Filter darf auf den safety-gefilterten Pool zurückfallen,
+    # niemals auf all_recipes (sonst wieder stiller Fallback auf unpassende Rezepte).
+    safety_pool = filtered
     recent_ids = await _get_recent_recipe_ids(
         config.household_id, config.month, config.year, db
     )
     if recent_ids:
         filtered = _filter_recent_recipes(filtered, recent_ids)
-
-    # Fallback: falls zu wenige Rezepte übrig
-    if len(filtered) < 5:
-        # Mindestens 5 verschiedene Rezepte für Abwechslung
-        filtered = all_recipes
+        if len(filtered) < 5:
+            filtered = safety_pool
 
     # ── Schritt 4: Monatsplan anlegen ──
     num_weeks = weeks_in_month(config.month, config.year)

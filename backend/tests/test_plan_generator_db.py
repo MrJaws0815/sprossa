@@ -41,9 +41,10 @@ async def demo_household(db):
     """Legt einen Demo-User + Household + Recipe + Ingredient an."""
     from app.core.auth import hash_password
 
-    # User erstellen
+    # User erstellen (eindeutige E-Mail gegen Unique-Constraint-Kollisionen)
+    _suffix = uuid.uuid4().hex[:6]
     user = User(
-        email="test-plan@e2e.de",
+        email=f"test-plan_{_suffix}@e2e.de",
         password_hash=hash_password("test1234"),
         display_name="Test Plan Familie",
     )
@@ -57,12 +58,13 @@ async def demo_household(db):
     await db.flush()
     await db.refresh(household)
 
-    # Zutaten erstellen
+    # Zutaten erstellen (eindeutiger Suffix gegen Unique-Constraint-Kollisionen)
+    suffix = uuid.uuid4().hex[:6]
     ingredients = []
     for name, cat in [("Karotten", "vegetables"), ("Kartoffeln", "vegetables"),
                        ("Hähnchenbrust", "meat"), ("Sahne", "dairy"),
                        ("Mehl", "grains"), ("Butter", "dairy")]:
-        ing = Ingredient(name=name, category=cat, unit_default="g")
+        ing = Ingredient(name=f"{name}_{suffix}", category=cat, unit_default="g")
         db.add(ing)
         ingredients.append(ing)
     await db.flush()
@@ -103,13 +105,26 @@ async def demo_household(db):
         "ingredients": ingredients,
     }
 
-    # Cleanup
-    await db.execute("DELETE FROM recipe_ingredients")
-    await db.execute("DELETE FROM recipes")
-    await db.execute("DELETE FROM ingredients")
-    await db.execute("DELETE FROM members")
-    await db.execute("DELETE FROM households")
-    await db.execute("DELETE FROM users")
+    # Cleanup: NUR die vom Fixture erzeugten Datensätze löschen (keine Seed-Daten!)
+    # Reihenfolge beachten: erst abhängige Tabellen (FK), dann Haushalt/User.
+    from sqlalchemy import text
+    hid = household.id
+    # 1) Grocery Items + Lists
+    await db.execute(text("DELETE FROM grocery_items WHERE grocery_list_id IN (SELECT id FROM grocery_lists WHERE household_id = :hid)"), {"hid": hid})
+    await db.execute(text("DELETE FROM grocery_lists WHERE household_id = :hid"), {"hid": hid})
+    # 2) Meal Slots -> Weekly Plans -> Monthly Plans
+    await db.execute(text("DELETE FROM meal_slots WHERE weekly_plan_id IN (SELECT id FROM weekly_plans WHERE household_id = :hid)"), {"hid": hid})
+    await db.execute(text("DELETE FROM weekly_plans WHERE household_id = :hid"), {"hid": hid})
+    await db.execute(text("DELETE FROM monthly_plans WHERE household_id = :hid"), {"hid": hid})
+    # 3) Recipe-Verknüpfungen -> Recipes -> Ingredients
+    await db.execute(text("DELETE FROM recipe_ingredients WHERE recipe_id IN (SELECT id FROM recipes WHERE household_id = :hid)"), {"hid": hid})
+    await db.execute(text("DELETE FROM recipes WHERE household_id = :hid"), {"hid": hid})
+    await db.execute(text("DELETE FROM ingredients WHERE name LIKE :pat"), {"pat": f"%_{suffix}"})
+    # 4) Members -> Household -> User
+    await db.execute(text("DELETE FROM members WHERE household_id = :hid"), {"hid": hid})
+    await db.execute(text("DELETE FROM households WHERE id = :hid"), {"hid": hid})
+    await db.execute(text("DELETE FROM users WHERE id = :uid"), {"uid": user.id})
+    await db.commit()
 
 
 @pytest.mark.asyncio

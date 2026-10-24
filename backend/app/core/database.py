@@ -1,8 +1,18 @@
 """Async-Datenbank-Engine & Session"""
+import os
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
+
 from app.core.config import settings
 
-engine = create_async_engine(settings.database_url, echo=settings.debug)
+# In Tests: NullPool, damit jede Testfunktion (eigener Event-Loop) eine frische
+# Connection bekommt. Sonst: "Future attached to a different loop" / MissingGreenlet.
+_engine_kwargs = {"echo": settings.debug}
+if os.getenv("MM_TESTING", "").lower() in ("1", "true", "yes"):
+    _engine_kwargs["poolclass"] = NullPool
+
+engine = create_async_engine(settings.database_url, **_engine_kwargs)
 async_session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
