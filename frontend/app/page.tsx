@@ -62,12 +62,12 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-5xl px-6">
       {/* ═══ HERO (Header kommt global aus app/Header.tsx via layout) ═══ */}
-      <section className="grid grid-cols-2 gap-10 items-start pt-14 pb-12">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start pt-14 pb-12">
         <div>
           <span className="inline-block text-xs font-bold tracking-widest uppercase text-sprossa-green bg-sprossa-sage px-3 py-2 rounded-full mb-5">
             Familien-Monatsplaner
           </span>
-          <h1 className="font-display text-6xl font-semibold leading-tight tracking-tight mb-5 text-sprossa-ink">
+          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-5 text-sprossa-ink">
             Euer Monat wächst.
             <br />
             <span className="text-sprossa-green">Wie ein Spross auf der Fensterbank.</span>
@@ -81,21 +81,26 @@ export default function HomePage() {
 
           {/* ═══ Waitlist-Formular (DSGVO-konform) – id "early-access" als Sprungziel ═══ */}
           <form id="early-access" onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-lg" noValidate>
-            <div className="flex gap-3">
+            {/* Mobil gestapelt: vorher quetschten Input + Button die Zeile auf 87 px Überlauf */}
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
+                id="early-email"
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEmailError(false); }}
                 placeholder="E-Mail für Early Access"
                 aria-label="E-Mail-Adresse"
+                aria-invalid={emailError || undefined}
+                aria-describedby={emailError ? "early-status" : undefined}
                 autoComplete="email"
+                inputMode="email"
                 required
-                className={`flex-1 px-5 py-4 border-2 rounded-xl text-base bg-white ${emailError ? "border-sprossa-error" : "border-sprossa-muted/20"} text-sprossa-ink`}
+                className={`flex-1 min-w-0 px-5 py-4 border-2 rounded-xl text-base bg-white ${emailError ? "border-sprossa-error" : "border-sprossa-muted/20"} text-sprossa-ink`}
               />
               <button
                 type="submit"
                 disabled={sending}
-                className="px-6 py-4 rounded-xl bg-sprossa-green text-white text-base font-bold whitespace-nowrap disabled:opacity-60"
+                className="px-6 py-4 rounded-xl bg-sprossa-green text-white text-base font-bold whitespace-nowrap disabled:opacity-60 sm:w-auto w-full"
               >
                 {sending ? "Wird gesendet…" : "Early Access sichern"}
               </button>
@@ -115,7 +120,7 @@ export default function HomePage() {
             </label>
             {/* Status */}
             {statusMsg && (
-              <div role="status" aria-live="polite" className={`text-sm font-bold ${statusOk ? "text-sprossa-dark" : "text-sprossa-error"}`}>
+              <div id="early-status" role={statusOk ? "status" : "alert"} aria-live={statusOk ? "polite" : "assertive"} className={`text-sm font-bold ${statusOk ? "text-sprossa-dark" : "text-sprossa-error"}`}>
                 {statusMsg}
               </div>
             )}
@@ -155,7 +160,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══ Kern-Value ═══ */}
-      <section className="grid grid-cols-3 gap-7 pt-14 pb-20">
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-7 pt-14 pb-20">
         {[
           { ico: "🗓️", title: "Ein Monat, nicht eine Woche", desc: "Effiziente Monatspläne statt Kurzfrist-Denken. Cook-Once-Eat-Twice spart Zeit und Geld." },
           { ico: "🧒", title: "Genau für eure Familie", desc: "Allergien, Kindern-Vorlieben, Zeitbudget – jeder Tag passt zu euren Bedürfnissen." },
@@ -174,9 +179,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-2.5 text-center">
             <div className="text-xs font-bold tracking-widest uppercase text-sprossa-green">So einfach</div>
-            <h2 className="font-display text-4xl text-center mb-10 mt-5 text-sprossa-green">Drei Schritte zu mehr Ruhe in der Küche</h2>
+            <h2 className="font-display text-3xl sm:text-4xl text-center mb-10 mt-5 text-sprossa-green">Drei Schritte zu mehr Ruhe in der Küche</h2>
           </div>
-          <div className="grid grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
             {[
               { num: "1", title: "Euer Profil", desc: "Wer kocht mit? Allergien? Wie viel Zeit am Abend? Einmal ausfüllen." },
               { num: "2", title: "Monat wird geplant", desc: "Rezepte, Zubereitung, Kinder-Tipps und saisonale Zutaten – automatisch." },
@@ -195,7 +200,7 @@ export default function HomePage() {
       {/* ═══ CTA ═══ */}
       <section id="cta" className="text-center pt-24 pb-28 bg-sprossa-sage">
         <div className="mx-auto max-w-5xl px-6">
-          <h2 className="font-display text-4xl max-w-xl mx-auto mb-4">
+          <h2 className="font-display text-3xl sm:text-4xl max-w-xl mx-auto mb-4">
             Schluss mit der „Was-kochen-wir-Frage".
           </h2>
           <p className="text-sprossa-muted mb-7">

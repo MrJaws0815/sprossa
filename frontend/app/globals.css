@@ -4,6 +4,11 @@
 
 /* Sprossa Design-Tokens – @theme generiert text-/bg-/border-sprossa-* Utilities */
 @theme {
+  /* Typografie: Tailwind v4 liest Font-Tokens aus @theme – fehlt --font-display,
+     fällt jede font-display-Utility auf die Body-Schrift (Nunito) zurück. */
+  --font-sans: "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+
   --color-sprossa-green: #3A7D44;
   --color-sprossa-dark: #2C5F34;
   --color-sprossa-sage: #EDF3E8;

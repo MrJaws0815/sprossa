@@ -13,7 +13,9 @@ venv/
 
 # Next.js
 .next/
+.next-build/
 out/
+*.tsbuildinfo
 
 # IDE
 .vscode/
@@ -33,3 +35,7 @@ docker-compose.override.yml
 
 # Uploads
 uploads/tsconfig.tsbuildinfo
+
+# Build-Artefakte
+backups/
+dist/
