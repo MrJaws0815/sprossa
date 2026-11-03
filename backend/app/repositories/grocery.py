@@ -20,7 +20,9 @@ class GroceryListRepository(BaseRepository[GroceryList]):
         stmt = (
             select(GroceryList)
             .where(GroceryList.id == list_id)
-            .options(selectinload(GroceryList.items))
+            .options(
+                selectinload(GroceryList.items).selectinload(GroceryItem.ingredient)
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
