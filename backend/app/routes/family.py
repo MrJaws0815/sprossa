@@ -3,7 +3,7 @@ from datetime import date
 from uuid import UUID
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -22,7 +22,15 @@ from app.services.plan_generator import (
     GeneratorConfig, generate_and_persist_monthly_plan, weeks_in_month,
     calculate_total_portions,
 )
-from app.services.grocery_engine import generate_and_persist_grocery_list
+from app.services.grocery_engine import (
+    _clean_item_notes,
+    build_export_csv,
+    build_export_rows,
+    build_export_txt,
+    generate_and_persist_grocery_list,
+    grocery_item_display_name,
+    sort_by_gang,
+)
 from app.repositories.household import HouseholdRepository
 from app.repositories.member import MemberRepository
 from app.core.ownership import (
@@ -33,6 +41,23 @@ from app.core.ownership import (
 # Kein router-level dependency: sync-Dep vor async DB-Writes verursacht MissingGreenlet.
 # Jede Route deklariert get_current_user_id selbst.
 router = APIRouter(tags=["family"])
+
+_MONTH_NAMES_DE = {
+    1: "Januar", 2: "Februar", 3: "März", 4: "April",
+    5: "Mai", 6: "Juni", 7: "Juli", 8: "August",
+    9: "September", 10: "Oktober", 11: "November", 12: "Dezember",
+}
+
+
+def _plan_stats(plan) -> tuple[str, int, int]:
+    """Liefert (deutscher Monatsname, Wochenanzahl, distinct Rezeptanzahl)."""
+    weeks = plan.weekly_plans or []
+    recipe_ids = {
+        slot.recipe_id
+        for week in weeks
+        for slot in (week.meal_slots or [])
+    }
+    return _MONTH_NAMES_DE.get(plan.month, ""), len(weeks), len(recipe_ids)
 
 
 # ─── Ingredients ──────────────────────────────────────────────────────────
@@ -92,6 +117,7 @@ async def create_recipe(
         prep_time_minutes=body.prep_time_minutes,
         cook_time_minutes=body.cook_time_minutes,
         difficulty=body.difficulty,
+        instructions=body.instructions,
         kid_friendly_tip=body.kid_friendly_tip,
         cook_once_eat_twice=body.cook_once_eat_twice,
         tags=body.tags or [],
@@ -103,6 +129,7 @@ async def create_recipe(
         prep_time_minutes=recipe.prep_time_minutes,
         cook_time_minutes=recipe.cook_time_minutes,
         difficulty=recipe.difficulty,
+        instructions=recipe.instructions,
         kid_friendly_tip=recipe.kid_friendly_tip,
         cook_once_eat_twice=recipe.cook_once_eat_twice,
         tags=recipe.tags or [],
@@ -112,11 +139,28 @@ async def create_recipe(
 
 @router.get("/recipes", response_model=list[RecipeOut])
 async def list_recipes(
+    planned_only: bool = False,
+    search: Optional[str] = None,
+    difficulty: Optional[str] = None,
+    max_time: Optional[int] = None,
+    tag: Optional[str] = None,
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
+    """Listet Rezepte, optional gefiltert (Suche, Schwierigkeit, Zeit, Tag).
+
+    planned_only=True: nur Rezepte, die in MealSlots der Pläne des Users vorkommen.
+    """
     repo = RecipeRepository(db)
-    recipes = await repo.get_all()
+    household_ids = [h.id for h in await get_user_households(db, user_id)]
+    recipes = await repo.list_filtered(
+        household_ids=household_ids,
+        planned_only=planned_only,
+        search=search,
+        difficulty=difficulty,
+        max_time=max_time,
+        tag=tag,
+    )
     return [
         RecipeOut(
             id=r.id, title=r.title,
@@ -125,6 +169,7 @@ async def list_recipes(
             prep_time_minutes=r.prep_time_minutes,
             cook_time_minutes=r.cook_time_minutes,
             difficulty=r.difficulty,
+            instructions=r.instructions,
             kid_friendly_tip=r.kid_friendly_tip,
             cook_once_eat_twice=r.cook_once_eat_twice,
             tags=r.tags or [],
@@ -137,6 +182,7 @@ async def list_recipes(
 @router.get("/recipes/{rid}", response_model=RecipeOut)
 async def get_recipe(
     rid: UUID,
+    multiplier: float = Query(1.0, ge=0.1, le=20),
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
@@ -144,13 +190,15 @@ async def get_recipe(
     recipe = await repo.get_with_ingredients(rid)
     if not recipe:
         raise HTTPException(status_code=404)
+    scaled_servings = round(recipe.servings * multiplier, 1)
     return RecipeOut(
         id=recipe.id, title=recipe.title,
         description=recipe.description,
-        servings=recipe.servings,
+        servings=scaled_servings,
         prep_time_minutes=recipe.prep_time_minutes,
         cook_time_minutes=recipe.cook_time_minutes,
         difficulty=recipe.difficulty,
+        instructions=recipe.instructions,
         kid_friendly_tip=recipe.kid_friendly_tip,
         cook_once_eat_twice=recipe.cook_once_eat_twice,
         tags=recipe.tags or [],
@@ -159,7 +207,9 @@ async def get_recipe(
                 "id": ri.id,
                 "ingredient_id": ri.ingredient_id,
                 "ingredient_name": ri.ingredient.name if ri.ingredient else None,
-                "quantity": ri.quantity,
+                "name": ri.ingredient.name if ri.ingredient else None,
+                "category": ri.ingredient.category if ri.ingredient else None,
+                "quantity": round(ri.quantity * multiplier, 2) if ri.quantity else ri.quantity,
                 "unit": ri.unit,
                 "is_optional": ri.is_optional,
                 "substitution_note": ri.substitution_note,
@@ -203,7 +253,11 @@ async def generate_plan(
 
     # ── Task 21: Portions-Faktor berechnen ──
     member_dicts = [
-        {"age": m.age, "allergies": m.allergies or []}
+        {
+            "age": m.age,
+            "allergies": m.allergies or [],
+            "dietary_goals": m.dietary_goals or {},
+        }
         for m in members if m.is_active
     ]
     total_portions = calculate_total_portions(member_dicts)
@@ -231,24 +285,27 @@ async def generate_plan(
     )
 
     monthly = await generate_and_persist_monthly_plan(config, db)
+    # Flag vor commit lesen: expire_on_commit entfernt Custom-Attribute.
+    was_created = bool(getattr(monthly, "was_created", True))
 
-    # Einkaufsliste für Woche 1 automatisch mit erzeugen (Produktvision: Plan + Liste in einem Flow)
+    # Einkaufslisten werden vom Generator bereits fuer ALLE Wochen angelegt
+    # (mit ISO-Kalenderwoche). Hier nur noch die erste Liste referenzieren,
+    # keine zweite Liste erzeugen.
     grocery_list_id = None
     grocery_items_count = 0
     plan_repo = MonthlyPlanRepository(db)
     monthly_full = await plan_repo.get_with_weekly(monthly.id)
-    if monthly_full and monthly_full.weekly_plans:
-        first_week = monthly_full.weekly_plans[0]
-        grocery = await generate_and_persist_grocery_list(
-            first_week, db,
-            household_id=household_id,
-            monthly_plan_id=monthly.id,
-            week_number=first_week.week_number,
-        )
-        grocery_list_id = str(grocery.id)
+    gl_repo = GroceryListRepository(db)
+    grocery_lists = await gl_repo.get_by_plan(monthly.id)
+    if grocery_lists:
+        first_grocery = sorted(
+            grocery_lists,
+            key=lambda g: (g.week_number is None, g.week_number or 0),
+        )[0]
+        grocery_list_id = str(first_grocery.id)
         # Explizit laden statt Lazy-Load auf grocery.items (MissingGreenlet vermeiden)
         gi_repo_count = GroceryItemRepository(db)
-        grocery_items_count = len(await gi_repo_count.get_by_list(grocery.id))
+        grocery_items_count = len(await gi_repo_count.get_by_list(first_grocery.id))
 
     await db.commit()
 
@@ -271,6 +328,8 @@ async def generate_plan(
         "plan_id": str(monthly.id),
         "month": body.month,
         "year": body.year,
+        "created": was_created,
+        "updated": not was_created,
         "weeks": len(weeks_data),
         "meal_slots_total": total_slots,
         "total_portions": monthly.total_portions,
@@ -295,20 +354,30 @@ async def list_plans(
         repo.model_class.household_id.in_(hh_ids),
         order_by=repo.model_class.year.desc(),
     )
-    return [
-        MonthlyPlanOut(
+    result = []
+    for p in plans:
+        # Relationships explizit laden – Lazy-Load wäre nach commit/async problematisch.
+        full = await repo.get_with_weekly(p.id)
+        if full is not None:
+            month_name, weeks_count, recipe_count = _plan_stats(full)
+        else:
+            month_name = _MONTH_NAMES_DE.get(p.month, "")
+            weeks_count = recipe_count = 0
+        result.append(MonthlyPlanOut(
             id=p.id,
             household_id=p.household_id,
             month=p.month,
             year=p.year,
+            month_name=month_name,
+            weeks_count=weeks_count,
+            recipe_count=recipe_count,
             status=p.status,
             focus_tags=p.focus_tags or [],
             generated_at=p.generated_at,
             notes=p.notes,
             total_portions=p.total_portions,
-        )
-        for p in plans
-    ]
+        ))
+    return result
 
 
 @router.get("/plans/{plan_id}", response_model=MonthlyPlanOut)
@@ -321,11 +390,15 @@ async def get_plan(
     repo = MonthlyPlanRepository(db)
     plan = await repo.get_with_weekly(plan_id)
     plan = await require_plan_owner(db, user_id, plan)  # IDOR-Schutz
+    month_name, weeks_count, recipe_count = _plan_stats(plan)
     return MonthlyPlanOut(
         id=plan.id,
         household_id=plan.household_id,
         month=plan.month,
         year=plan.year,
+        month_name=month_name,
+        weeks_count=weeks_count,
+        recipe_count=recipe_count,
         status=plan.status,
         focus_tags=plan.focus_tags or [],
         generated_at=plan.generated_at,
@@ -358,6 +431,8 @@ async def get_weekly_plan(
                 day_of_week=slot.day_of_week,
                 meal_type=slot.meal_type,
                 recipe_id=slot.recipe_id,
+                recipe_title=slot.recipe.title if slot.recipe else None,
+                recipe_servings=slot.recipe.servings if slot.recipe else None,
                 servings_multiplier=slot.servings_multiplier,
                 is_repeat=slot.is_repeat,
             )
@@ -397,6 +472,8 @@ async def list_weekly_plans(
                 MealSlotOut(
                     id=s.id, day_of_week=s.day_of_week,
                     meal_type=s.meal_type, recipe_id=s.recipe_id,
+                    recipe_title=s.recipe.title if s.recipe else None,
+                    recipe_servings=s.recipe.servings if s.recipe else None,
                     servings_multiplier=s.servings_multiplier,
                     is_repeat=s.is_repeat,
                 )
@@ -427,7 +504,10 @@ async def generate_grocery(
             weekly, db,
             household_id=household_id,
             monthly_plan_id=weekly.monthly_plan_id,
-            week_number=weekly.week_number,
+            week_number=(
+                weekly.start_date.isocalendar()[1]
+                if weekly.start_date else None
+            ),
         )
     else:
         # Letzten Monatsplan des Haushalts verwenden
@@ -442,36 +522,140 @@ async def generate_grocery(
         if not weekly_plans:
             raise HTTPException(status_code=400, detail="No weekly plans found")
 
-        weekly = await week_repo.get_with_slots(weekly_plans[0].id)
-        grocery = await generate_and_persist_grocery_list(
-            weekly, db,
-            household_id=household_id,
-            monthly_plan_id=latest.id,
-            week_number=weekly.week_number,
+        # Einkaufsfrequenz aus dem Haushaltsprofil lesen.
+        household_repo = HouseholdRepository(db)
+        household = await household_repo.get(household_id)
+        shopping_frequency = (
+            (household.dietary_profile or {}).get("shopping_frequency")
+            if household else None
         )
+        is_master = shopping_frequency in (None, "", "nach_bedarf")
+
+        if is_master:
+            # Master-Liste: alle Slots des Monats in einer Einkaufsliste zusammenfassen.
+            from types import SimpleNamespace
+            from typing import cast
+            from app.models.database import WeeklyPlan as _WeeklyPlan
+
+            all_slots = []
+            for wp in weekly_plans:
+                wp_full = await week_repo.get_with_slots(wp.id)
+                if wp_full and wp_full.meal_slots:
+                    all_slots.extend(wp_full.meal_slots)
+
+            dummy_plan = cast(_WeeklyPlan, SimpleNamespace(meal_slots=all_slots))
+            grocery = await generate_and_persist_grocery_list(
+                dummy_plan, db,
+                household_id=household_id,
+                monthly_plan_id=latest.id,
+                week_number=None,
+            )
+        else:
+            weekly = await week_repo.get_with_slots(weekly_plans[0].id)
+            if weekly is None:
+                raise HTTPException(status_code=404, detail="Weekly plan not found")
+            grocery = await generate_and_persist_grocery_list(
+                weekly, db,
+                household_id=household_id,
+                monthly_plan_id=latest.id,
+                week_number=(
+                    weekly.start_date.isocalendar()[1]
+                    if weekly.start_date else None
+                ),
+            )
 
     await db.commit()
 
     gi_repo = GroceryItemRepository(db)
     items = await gi_repo.get_by_list(grocery.id)
 
+    # Supermarkt aus dem Haushaltsprofil für die Gang-Sortierung lesen.
+    household_repo = HouseholdRepository(db)
+    household = await household_repo.get(household_id)
+    supermarket = (
+        (household.dietary_profile or {}).get("preferred_supermarket", "Rewe")
+        if household else "Rewe"
+    )
+
+    rows = [
+        {
+            "id": str(item.id),
+            "ingredient_id": str(item.ingredient_id),
+            "quantity_total": item.quantity_total,
+            "unit": item.unit,
+            "category": item.category_override or "other",
+            "is_checked": item.is_checked,
+            "notes": _clean_item_notes(item.notes),
+            "name": grocery_item_display_name(
+                item.ingredient.name if item.ingredient else "Zutat",
+                item.notes,
+                item.category_override or "other",
+            ),
+        }
+        for item in items
+    ]
     return {
         "grocery_list_id": str(grocery.id),
         "week_number": grocery.week_number,
         "is_master_list": grocery.is_master_list,
-        "items": [
-            {
-                "id": str(item.id),
-                "ingredient_id": str(item.ingredient_id),
-                "quantity_total": item.quantity_total,
-                "unit": item.unit,
-                "category": item.category_override or "other",
-                "is_checked": item.is_checked,
-                "notes": item.notes,
-            }
-            for item in items
-        ],
+        "segment_label": getattr(grocery, "segment_label", None),
+        "items": sort_by_gang(rows, supermarket=supermarket),
     }
+
+
+@router.get("/grocery-lists/{gl_id}/export")
+async def export_grocery_list(
+    gl_id: UUID,
+    fmt: str = Query("csv", alias="format", pattern="^(csv|txt)$"),
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    """Exportiert eine Einkaufsliste als CSV oder TXT.
+
+    CSV: Semikolon-getrennt, UTF-8 mit BOM, CRLF – öffnet in deutschem Excel
+    ohne Import-Dialog. Spalten: Menge; Einheit; Zutat; Gang.
+    TXT: druckbare Liste mit Gang-Überschriften.
+    Nur eigene Haushalte (IDOR-Schutz); fremde/nicht existierende Listen → 404.
+    """
+    repo = GroceryListRepository(db)
+    gl = await repo.get_with_items(gl_id)
+    gl = await require_grocery_owner(db, user_id, gl)  # IDOR-Schutz, 404
+
+    # Supermarkt-Label für den TXT-Kopf (optional, Fallback "Rewe")
+    supermarket = "Rewe"
+    try:
+        households = await get_user_households(db, user_id)
+        for h in households:
+            if h.id == gl.household_id:
+                supermarket = (h.dietary_profile or {}).get("preferred_supermarket", "Rewe")
+                break
+    except Exception:
+        pass  # Export darf nicht an optionalem Label scheitern
+
+    # Items über das Repository laden: eager-load von ingredient, sonst
+    # MissingGreenlet beim Zugriff auf item.ingredient in async-Session.
+    gi_repo = GroceryItemRepository(db)
+    raw_items = await gi_repo.get_by_list(gl.id)
+    # Task 82: Gang-Reihenfolge richtet sich nach dem Supermarkt-Profil.
+    rows = build_export_rows(raw_items, supermarket=supermarket)
+    suffix = f"kw{gl.week_number}" if gl.week_number is not None else "monat"
+    filename = f"einkaufsliste_{suffix}_{str(gl.id)[:8]}.{fmt}"
+
+    if fmt == "csv":
+        payload = "\ufeff" + build_export_csv(rows, supermarket=supermarket)
+        media_type = "text/csv; charset=utf-8"
+    else:
+        payload = build_export_txt(rows, week_number=gl.week_number, supermarket=supermarket)
+        media_type = "text/plain; charset=utf-8"
+
+    return Response(
+        content=payload.encode("utf-8"),
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get("/grocery-lists", response_model=list[GroceryListOut])
@@ -502,24 +686,42 @@ async def list_grocery_lists(
     for gl in lists:
         # Explizit laden statt Lazy-Load auf gl.items (MissingGreenlet vermeiden)
         raw_items = await gi_repo_list.get_by_list(gl.id)
-        items = [
-            GroceryItemOut(
-                id=item.id,
-                ingredient_name=(item.ingredient.name if item.ingredient else str(item.ingredient_id)),
-                category=item.category_override or "other",
-                quantity_total=item.quantity_total,
-                unit=item.unit,
-                is_checked=item.is_checked,
-                notes=item.notes,
-            )
-            for item in raw_items
-        ]
+        items = sort_by_gang(
+            [
+                GroceryItemOut(
+                    id=item.id,
+                    ingredient_name=grocery_item_display_name(
+                        item.ingredient.name if item.ingredient else str(item.ingredient_id),
+                        item.notes,
+                        item.category_override or "other",
+                    ),
+                    category=item.category_override or "other",
+                    quantity_total=item.quantity_total,
+                    unit=item.unit,
+                    is_checked=item.is_checked,
+                    notes=_clean_item_notes(item.notes),
+                )
+                for item in raw_items
+            ],
+            name_key="ingredient_name",
+            supermarket=supermarket,
+        )
+        # Task 85: segment_label ist kein DB-Feld. Wir leiten es aus der
+        # Position ab, wenn mehrere Listen dieselbe KW teilen (Einkaufstage).
+        _label = getattr(gl, "segment_label", None)
+        if _label is None and not gl.is_master_list and gl.week_number is not None:
+            _same_week = [g for g in lists if g.week_number == gl.week_number and not g.is_master_list]
+            if len(_same_week) > 1:
+                _idx = next((i for i, g in enumerate(_same_week) if g.id == gl.id), 0) + 1
+                _label = f"Einkauf {_idx}/{len(_same_week)}"
         result.append(GroceryListOut(
             id=gl.id,
             week_number=gl.week_number,
+            cw=gl.week_number,
             is_master_list=gl.is_master_list,
             generated_at=gl.generated_at,
             supermarket=supermarket,
+            segment_label=_label,
             items=items,
         ))
     return result
@@ -535,25 +737,50 @@ async def get_grocery_list(
     repo = GroceryListRepository(db)
     gl = await repo.get_with_items(gl_id)
     gl = await require_grocery_owner(db, user_id, gl)  # IDOR-Schutz
+    gi_repo = GroceryItemRepository(db)
+    raw_items = await gi_repo.get_by_list(gl.id)
+
+    # Supermarkt aus dem Haushaltsprofil lesen (Fallback "Rewe").
+    supermarket = "Rewe"
+    try:
+        households = await get_user_households(db, user_id)
+        for h in households:
+            if h.id == gl.household_id:
+                supermarket = (h.dietary_profile or {}).get("preferred_supermarket", "Rewe")
+                break
+    except Exception:
+        pass
+
     items = []
-    if gl.items:
-        items = [
-            GroceryItemOut(
-                id=item.id,
-                ingredient_name=str(item.ingredient_id),
-                category=item.category_override or "other",
-                quantity_total=item.quantity_total,
-                unit=item.unit,
-                is_checked=item.is_checked,
-                notes=item.notes,
-            )
-            for item in gl.items
-        ]
+    if raw_items:
+        items = sort_by_gang(
+            [
+                GroceryItemOut(
+                    id=item.id,
+                    ingredient_name=grocery_item_display_name(
+                        item.ingredient.name if item.ingredient else str(item.ingredient_id),
+                        item.notes,
+                        item.category_override or "other",
+                    ),
+                    category=item.category_override or "other",
+                    quantity_total=item.quantity_total,
+                    unit=item.unit,
+                    is_checked=item.is_checked,
+                    notes=_clean_item_notes(item.notes),
+                )
+                for item in raw_items
+            ],
+            name_key="ingredient_name",
+            supermarket=supermarket,
+        )
     return GroceryListOut(
         id=gl.id,
         week_number=gl.week_number,
+        cw=gl.week_number,
         is_master_list=gl.is_master_list,
         generated_at=gl.generated_at,
+        supermarket=supermarket,
+        segment_label=getattr(gl, "segment_label", None),
         items=items,
     )
 
