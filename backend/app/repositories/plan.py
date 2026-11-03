@@ -20,7 +20,9 @@ class WeeklyPlanRepository(BaseRepository[WeeklyPlan]):
         stmt = (
             select(WeeklyPlan)
             .where(WeeklyPlan.id == plan_id)
-            .options(selectinload(WeeklyPlan.meal_slots))
+            .options(
+                selectinload(WeeklyPlan.meal_slots).selectinload(MealSlot.recipe)
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
