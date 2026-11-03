@@ -50,8 +50,12 @@ from app.routes.auth import router as auth_router
 from app.routes.households import router as household_router
 from app.routes.family import router as family_router
 from app.routes.waitlist import router as waitlist_router
+from app.routes.swap import router as swap_router
+from app.routes.track import router as track_router
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(household_router, prefix="/api/v1")
 app.include_router(family_router, prefix="/api/v1")
 app.include_router(waitlist_router, prefix="/api/v1")
+app.include_router(swap_router, prefix="/api/v1")
+app.include_router(track_router, prefix="/api/v1")

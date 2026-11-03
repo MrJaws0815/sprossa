@@ -269,3 +269,28 @@ class WaitlistEntryModel(Base):
     source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     utm_campaign: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+
+
+# ─── Pageview (Traffic-Tracking Landingpage) ────────────────────────────
+
+class PageviewModel(Base):
+    """Einzelner Seitenaufruf der Landingpage – Grundlage für das interne Dashboard.
+
+    Bewusst ohne IP-Adresse und ohne Cookie: `session_hash` ist ein täglich
+    wechselnder Hash aus (IP + User-Agent + Tagesdatum), damit eindeutige
+    Besucher zählbar bleiben, ohne personenbezogene Daten zu speichern.
+    """
+    __tablename__ = "pageview"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True
+    )
+    path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    referrer: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    utm_source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    utm_medium: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_campaign: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    utm_content: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    session_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    device: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
