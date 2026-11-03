@@ -39,3 +39,7 @@ uploads/tsconfig.tsbuildinfo
 # Build-Artefakte
 backups/
 dist/
+
+# Lokale Sicherungen und Scratch
+*.bak
+tmp_*.*

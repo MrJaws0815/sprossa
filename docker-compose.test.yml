@@ -51,6 +51,9 @@ services:
       MM_SMTP_USE_TLS: "${MM_SMTP_USE_TLS:-true}"
       MM_SMTP_FROM: "hallo@sprossa.de"
       MM_SMTP_FROM_NAME: "Sprossa"
+      # Internes Traffic-Dashboard (HTTP-Basic-Auth):
+      DASHBOARD_USER: "sprossa"
+      DASHBOARD_PASSWORD: "DW98AAXqQG6QszX"
       # MM_SMTP_USERNAME + MM_SMTP_PASSWORD kommen via env_file (.env.test):
       # NICHT hier interpolieren, sonst überschreibt die leere Interpolation den Wert.
     ports:
@@ -67,9 +70,11 @@ services:
     container_name: sprossa-test-frontend
     command: npm run dev
     volumes:
+      # Nur den Quellcode mounten. KEINE anonymen Volumes für node_modules/.next:
+      # das Image ist ein Production-Standalone-Build ohne node_modules und würde
+      # die Host-Abhängigkeiten mit einem leeren Verzeichnis überschreiben
+      # (Folge: "sh: next: not found" -> 502 am Proxy).
       - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
     environment:
       NODE_ENV: development
     ports:
