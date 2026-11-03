@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import (
@@ -27,8 +27,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str
-    display_name: str
+    password: str = Field(min_length=8, description="Mindestens 8 Zeichen")
+    display_name: str = Field(min_length=1, max_length=100)
 
 
 class LoginRequest(BaseModel):
