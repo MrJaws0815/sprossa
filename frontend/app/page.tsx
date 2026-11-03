@@ -1,6 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+
+/* ─── Icon-Sprache (statt Emoji) ─────────────────────────────────────────── */
+function IconCalendar() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A7D44" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="17" rx="3" />
+      <path d="M3 9h18M8 2v4M16 2v4M8 14h3M8 17h6" />
+    </svg>
+  );
+}
+
+function IconFamily() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A7D44" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0M17 5.5a3 3 0 0 1 0 5.8M18 20a6 6 0 0 0-3-5.2" />
+    </svg>
+  );
+}
+
+function IconBasket() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3A7D44" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9h16l-1.4 10.2A2 2 0 0 1 16.6 21H7.4a2 2 0 0 1-2-1.8L4 9Z" />
+      <path d="M8.5 9 12 3l3.5 6" />
+    </svg>
+  );
+}
+
+function IconCart({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#2C5F34" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+    </svg>
+  );
+}
+
+const WEEK = [
+  ["Mo", "Linsen-Curry mit Kokos", "Cook once"],
+  ["Di", "Curry-Reis-Bowl (Reste)", "Eat twice"],
+  ["Mi", "Nudelauflauf mit Zucchini", "Schnell"],
+  ["Do", "Salmon-Bowl mit Süßkartoffel", "Cook once"],
+  ["Fr", "Bowl-Reste mit Ei", "Eat twice"],
+  ["Sa", "Pizza-Pfanne, Familien-Favorit", "Genuss"],
+  ["So", "Kürbissuppe mit Brot", "Sonntag"],
+] as const;
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
@@ -10,6 +58,12 @@ export default function HomePage() {
   const [sending, setSending] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [consentError, setConsentError] = useState(false);
+  const emailRef = useRef<HTMLInputElement>(null);
+
+  function focusEmail() {
+    emailRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    emailRef.current?.focus({ preventScroll: true });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -18,11 +72,12 @@ export default function HomePage() {
     setEmailError(false);
     setConsentError(false);
 
-    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    const emailOk = /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim());
     if (!emailOk) {
       setEmailError(true);
-      setStatusMsg("Bitte gib eine gültige E-Mail-Adresse ein.");
+      setStatusMsg("Bitte prüft eure E-Mail-Adresse – dann sind wir startklar.");
       setStatusOk(false);
+      emailRef.current?.focus();
       return;
     }
     if (!consent) {
@@ -60,137 +115,251 @@ export default function HomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6">
-      {/* ═══ HERO (Header kommt global aus app/Header.tsx via layout) ═══ */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start pt-14 pb-12">
-        <div>
-          <span className="inline-block text-xs font-bold tracking-widest uppercase text-sprossa-green bg-sprossa-sage px-3 py-2 rounded-full mb-5">
-            Familien-Monatsplaner
-          </span>
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight tracking-tight mb-5 text-sprossa-ink">
-            Euer Monat wächst.
-            <br />
-            <span className="text-sprossa-green">Wie ein Spross auf der Fensterbank.</span>
-          </h1>
-          <p className="text-lg text-sprossa-muted mb-3.5">
-            Wochenende. Kühlschrank leer. "Was kochen wir?" – Musik in #millionen Küchen.
-          </p>
-          <p className="text-xl font-semibold mb-7 text-sprossa-ink">
-            Sprossa pflanzt euren ganzen Monat: Rezepte für jeden Tag, die mitwächst – passend zu eurem Kühlschrank, euren Kindern, eurem Budget.
-          </p>
+    <>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-0 focus:top-0 focus:z-50 focus:rounded-br-xl focus:bg-sprossa-green focus:px-[18px] focus:py-3 focus:font-extrabold focus:text-white"
+      >
+        Zum Inhalt springen
+      </a>
 
-          {/* ═══ Waitlist-Formular (DSGVO-konform) – id "early-access" als Sprungziel ═══ */}
-          <form id="early-access" onSubmit={handleSubmit} className="flex flex-col gap-3 max-w-lg" noValidate>
-            {/* Mobil gestapelt: vorher quetschten Input + Button die Zeile auf 87 px Überlauf */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                id="early-email"
-                type="email"
-                value={email}
-                onChange={(e) => { setEmail(e.target.value); setEmailError(false); }}
-                placeholder="E-Mail für Early Access"
-                aria-label="E-Mail-Adresse"
-                aria-invalid={emailError || undefined}
-                aria-describedby={emailError ? "early-status" : undefined}
-                autoComplete="email"
-                inputMode="email"
-                required
-                className={`flex-1 min-w-0 px-5 py-4 border-2 rounded-xl text-base bg-white ${emailError ? "border-sprossa-error" : "border-sprossa-muted/20"} text-sprossa-ink`}
-              />
-              <button
-                type="submit"
-                disabled={sending}
-                className="px-6 py-4 rounded-xl bg-sprossa-green text-white text-base font-bold whitespace-nowrap disabled:opacity-60 sm:w-auto w-full"
-              >
-                {sending ? "Wird gesendet…" : "Early Access sichern"}
-              </button>
-            </div>
-            {/* DSGVO: Einwilligung, NICHT vorbelegt */}
-            <label className={`touch-target flex gap-3 items-start text-xs leading-normal ${consentError ? "text-sprossa-error" : "text-sprossa-muted"}`}>
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(e) => { setConsent(e.target.checked); setConsentError(false); }}
-                className="mt-1 w-4 h-4 shrink-0"
-              />
-              <span>
-                Ich möchte per E-Mail über den Beta-Start von Sprossa informiert werden und bin mit der Verarbeitung meiner E-Mail-Adresse zu diesem Zweck gemäß der{" "}
-                <a href="/datenschutz" target="_blank" rel="noopener" className="underline text-sprossa-green">Datenschutzerklärung</a> einverstanden.
+      <div className="mx-auto max-w-[1080px] px-6">
+        <main id="main">
+          {/* ═══ HERO ═══ */}
+          <section className="grid grid-cols-1 items-center gap-9 pt-11 pb-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
+            <div>
+              <span className="mb-5 inline-block rounded-full bg-sprossa-sage px-3 py-1.5 text-xs font-extrabold uppercase tracking-[1.4px] text-sprossa-dark">
+                Familien-Monatsplaner
               </span>
-            </label>
-            {/* Status */}
-            {statusMsg && (
-              <div id="early-status" role={statusOk ? "status" : "alert"} aria-live={statusOk ? "polite" : "assertive"} className={`text-sm font-bold ${statusOk ? "text-sprossa-dark" : "text-sprossa-error"}`}>
-                {statusMsg}
+
+              <h1 className="mb-5 font-display text-[clamp(34px,5.2vw,56px)] font-semibold leading-[1.06] tracking-[-1px] text-balance text-sprossa-ink">
+                Euer Monat wächst.
+                <br />
+                Wie{" "}
+                <span className="text-sprossa-green">
+                  ein Spross auf der Fensterbank.
+                </span>
+              </h1>
+
+              <p className="mb-3 max-w-[34em] text-[18px] text-sprossa-muted-strong">
+                Wochenende. Kühlschrank leer. „Was kochen wir?“ – dieselbe Frage in
+                Millionen Küchen.
+              </p>
+              <p className="mb-7 max-w-[32em] text-[19px] font-semibold leading-[1.5] text-sprossa-ink">
+                Sprossa pflanzt euren ganzen Monat: Rezepte für jeden Tag, die
+                mitwachsen – passend zu eurem Kühlschrank, euren Kindern, eurem
+                Budget.
+              </p>
+
+              {/* ═══ Waitlist-Formular (DSGVO-konform) ═══ */}
+              <form
+                id="early-access"
+                onSubmit={handleSubmit}
+                className="flex max-w-[480px] flex-col gap-3 sm:flex-row sm:items-end sm:gap-3"
+                noValidate
+              >
+                <div className="flex flex-1 flex-col gap-1.5">
+                  <label
+                    htmlFor="early-email"
+                    className="text-[12.5px] font-extrabold tracking-[.02em] text-sprossa-dark"
+                  >
+                    E-Mail für Early Access
+                  </label>
+                  <input
+                    ref={emailRef}
+                    id="early-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setEmailError(false);
+                    }}
+                    placeholder="name@beispiel.de"
+                    aria-label="E-Mail-Adresse"
+                    aria-invalid={emailError || undefined}
+                    aria-describedby="early-status"
+                    autoComplete="email"
+                    inputMode="email"
+                    required
+                    className={`w-full rounded-[14px] border-[1.5px] bg-white px-4 py-[15px] text-base text-sprossa-ink transition placeholder:text-[#8a938c] focus:outline-none focus:ring-4 ${
+                      emailError
+                        ? "border-sprossa-error focus:border-sprossa-error focus:ring-sprossa-error/15"
+                        : "border-sprossa-ink/12 focus:border-sprossa-green focus:ring-sprossa-green/15"
+                    }`}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="rounded-[14px] bg-sprossa-green px-[22px] py-[15px] text-base font-extrabold whitespace-nowrap text-white transition hover:bg-sprossa-dark active:translate-y-px disabled:cursor-progress disabled:bg-[#9db3a1] sm:w-auto w-full"
+                >
+                  {sending ? "Wird gesendet …" : "Early Access sichern"}
+                </button>
+              </form>
+
+              {/* DSGVO: Einwilligung, NICHT vorbelegt */}
+              <label
+                className={`mt-3 flex max-w-[480px] items-start gap-3 text-[12.5px] leading-normal ${
+                  consentError ? "text-sprossa-error" : "text-sprossa-muted-strong"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => {
+                    setConsent(e.target.checked);
+                    setConsentError(false);
+                  }}
+                  className="mt-0.5 h-4 w-4 shrink-0"
+                />
+                <span>
+                  Ich möchte per E-Mail über den Beta-Start von Sprossa informiert
+                  werden und bin mit der Verarbeitung meiner E-Mail-Adresse zu diesem
+                  Zweck gemäß der{" "}
+                  <a
+                    href="/datenschutz"
+                    target="_blank"
+                    rel="noopener"
+                    className="font-semibold text-sprossa-green underline"
+                  >
+                    Datenschutzerklärung
+                  </a>{" "}
+                  einverstanden.
+                </span>
+              </label>
+
+              {/* Status */}
+              <p
+                id="early-status"
+                role={statusOk ? "status" : "alert"}
+                aria-live={statusOk ? "polite" : "assertive"}
+                className={`mt-2.5 min-h-[20px] text-[13px] leading-[1.5] ${
+                  statusOk === true
+                    ? "font-extrabold text-sprossa-dark"
+                    : statusMsg
+                      ? "font-bold text-sprossa-error"
+                      : "text-sprossa-muted-strong"
+                }`}
+              >
+                {statusMsg || "Kostenlos zum Launch · Früher Zugang · Kein Spam"}
+              </p>
+            </div>
+
+            {/* ═══ Wochenplan-Beispiel ═══ */}
+            <div
+              className="overflow-hidden rounded-[22px] border border-sprossa-ink/12 bg-white shadow-[0_18px_40px_rgba(38,48,43,.08)]"
+              aria-label="Beispiel: Wochenplan Woche 1"
+            >
+              <div className="flex items-center justify-between gap-2.5 border-b border-sprossa-ink/12 px-[22px] py-[18px]">
+                <div className="text-[15px] font-extrabold text-sprossa-ink">
+                  Wochenplan · Woche 1
+                </div>
+                <div className="rounded-full bg-sprossa-sage px-2.5 py-1 text-[11px] font-extrabold whitespace-nowrap text-sprossa-dark">
+                  2 Kinder · Flexitarisch
+                </div>
               </div>
-            )}
-          </form>
-          <p className="text-xs text-sprossa-muted mt-3">
-            🚀 Kostenlos zum Launch · Früher Zugang · Kein Spam
-          </p>
-        </div>
 
-        {/* ═══ Wochenplan-Beispiel-Karte ═══ */}
-        <div className="rounded-2xl border border-sprossa-ink/10 bg-white shadow-xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-sprossa-ink/10">
-            <div className="font-bold">Wochenplan · Woche 1</div>
-            <div className="text-xs font-bold text-sprossa-dark bg-sprossa-sage px-3 py-1 rounded-full">
-              2 Kids · Flexitarisch
+              {WEEK.map(([tag, dish, chip]) => (
+                <div
+                  key={tag}
+                  className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-b border-dashed border-sprossa-ink/12 px-[22px] py-[15px] last:border-b-0"
+                >
+                  <span className="w-[34px] shrink-0 text-xs font-extrabold uppercase tracking-[.08em] text-sprossa-dark">
+                    {tag}
+                  </span>
+                  <span className="flex-1 text-[15px] font-bold text-sprossa-ink">
+                    {dish}
+                  </span>
+                  <span className="text-[11.5px] font-extrabold whitespace-nowrap text-sprossa-terracotta-ink">
+                    {chip}
+                  </span>
+                </div>
+              ))}
+
+              <div className="flex items-center gap-2 bg-sprossa-sage px-[22px] py-3.5 text-[13px] font-bold leading-[1.4] text-sprossa-dark">
+                <IconCart />
+                Einkaufsliste fertig – nach Kategorien sortiert
+              </div>
             </div>
-          </div>
-          {[
-            ["Mo", "Linsen-Curry mit Kokos", "⟲ Cook once"],
-            ["Di", "Curry-Reis-Bowl (Rest)", "eat twice"],
-            ["Mi", "Nudelauflauf mit Zucchini", "Schnell"],
-            ["Do", "Salmon-Bowl mit Süßkartoffel", "⟲ Cook once"],
-            ["Fr", "Bowl-Reste mit Ei", "eat twice"],
-            ["Sa", "Pizza-Pfanne, Familien-Favorit", "Genuss"],
-            ["So", "Kürbissuppe mit Brot", "Sonntag"],
-          ].map(([tag, dish, chip]) => (
-            <div key={tag} className="flex items-center justify-between px-6 py-3 border-b border-dashed border-sprossa-ink/10">
-              <span className="font-bold uppercase text-sprossa-green text-xs tracking-wider w-15">{tag}</span>
-              <span className="font-bold text-sprossa-ink">{dish}</span>
-              <span className="text-xs font-bold text-sprossa-terracotta">{chip}</span>
-            </div>
-          ))}
-          <div className="flex items-center gap-2 px-6 py-3 bg-sprossa-sage text-sm font-bold text-sprossa-dark">
-            🛒 Einkaufsliste fertig generiert – nach Kategorien sortiert
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* ═══ Kern-Value ═══ */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-7 pt-14 pb-20">
-        {[
-          { ico: "🗓️", title: "Ein Monat, nicht eine Woche", desc: "Effiziente Monatspläne statt Kurzfrist-Denken. Cook-Once-Eat-Twice spart Zeit und Geld." },
-          { ico: "🧒", title: "Genau für eure Familie", desc: "Allergien, Kindern-Vorlieben, Zeitbudget – jeder Tag passt zu euren Bedürfnissen." },
-          { ico: "🧺", title: "Einkauf in einem Rutsch", desc: "Eine sortierte Einkaufsliste. Kein doppelt Einkaufen, kein vergessenes Gemüse." },
-        ].map(({ ico, title, desc }) => (
-          <div key={title}>
-            <div className="text-3xl mb-3 text-sprossa-terracotta">{ico}</div>
-            <h3 className="font-display text-xl mb-2 text-sprossa-green">{title}</h3>
-            <p className="text-sm text-sprossa-muted">{desc}</p>
-          </div>
-        ))}
-      </section>
-
-      {/* ═══ How It Works ═══ */}
-      <section className="bg-white pt-24 pb-24 border-t border-b border-sprossa-ink/10">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mb-2.5 text-center">
-            <div className="text-xs font-bold tracking-widest uppercase text-sprossa-green">So einfach</div>
-            <h2 className="font-display text-3xl sm:text-4xl text-center mb-10 mt-5 text-sprossa-green">Drei Schritte zu mehr Ruhe in der Küche</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10">
+          {/* ═══ Kern-Value ═══ */}
+          <section className="grid grid-cols-1 gap-8 py-16 sm:grid-cols-3">
             {[
-              { num: "1", title: "Euer Profil", desc: "Wer kocht mit? Allergien? Wie viel Zeit am Abend? Einmal ausfüllen." },
-              { num: "2", title: "Monat wird geplant", desc: "Rezepte, Zubereitung, Kinder-Tipps und saisonale Zutaten – automatisch." },
-              { num: "3", title: "Einkaufsliste fertig", desc: "Nach Kategorien sortiert, für einen effizienten Einkaufsgang im Supermarkt." },
-            ].map(({ num, title, desc }) => (
-              <div key={num}>
-                <div className="font-display text-5xl text-sprossa-green opacity-40 leading-none mb-2">{num}</div>
-                <h3 className="text-lg mb-1.5 text-sprossa-green">{title}</h3>
-                <p className="text-sm text-sprossa-muted">{desc}</p>
+              {
+                icon: <IconCalendar />,
+                title: "Ein Monat, nicht eine Woche",
+                desc: "Effiziente Monatspläne statt Kurzfrist-Denken. Cook-once-eat-twice spart Zeit und Geld.",
+              },
+              {
+                icon: <IconFamily />,
+                title: "Genau für eure Familie",
+                desc: "Allergien, Vorlieben der Kinder, Zeit am Abend – jeder Tag passt zu euren Bedürfnissen.",
+              },
+              {
+                icon: <IconBasket />,
+                title: "Einkauf in einem Rutsch",
+                desc: "Eine sortierte Einkaufsliste. Kein doppeltes Einkaufen, kein vergessenes Gemüse.",
+              },
+            ].map(({ icon, title, desc }) => (
+              <div key={title}>
+                <div className="mb-3.5 grid size-11 place-items-center rounded-xl bg-sprossa-sage">
+                  {icon}
+                </div>
+                <h3 className="mb-1.5 font-display text-xl font-semibold text-sprossa-ink">
+                  {title}
+                </h3>
+                <p className="text-[15px] text-sprossa-muted-strong">{desc}</p>
+              </div>
+            ))}
+          </section>
+        </main>
+      </div>
+
+      {/* ═══ So einfach ═══ */}
+      <section className="border-y border-sprossa-ink/12 bg-white py-16">
+        <div className="mx-auto max-w-[1080px] px-6">
+          <div className="mb-2.5 text-center">
+            <div className="text-xs font-extrabold uppercase tracking-[1.4px] text-sprossa-dark">
+              So einfach
+            </div>
+            <h2 className="mx-auto mt-2.5 mb-7 font-display text-[clamp(26px,3.4vw,34px)] font-semibold leading-[1.15] text-balance text-sprossa-ink">
+              Drei Schritte zu mehr Ruhe in der Küche
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-[26px] sm:grid-cols-3 sm:gap-10">
+            {[
+              {
+                num: "1",
+                title: "Euer Profil",
+                desc: "Wer kocht mit? Allergien? Wie viel Zeit am Abend? Einmal ausfüllen.",
+              },
+              {
+                num: "2",
+                title: "Monat wird geplant",
+                desc: "Rezepte, Zubereitung, Kinder-Tipps und saisonale Zutaten – automatisch.",
+              },
+              {
+                num: "3",
+                title: "Einkaufsliste fertig",
+                desc: "Nach Kategorien sortiert, für einen entspannten Einkaufsgang.",
+              },
+            ].map(({ num, title, desc }, i, arr) => (
+              <div key={num} className="relative pt-1.5">
+                <div className="mb-1.5 font-display text-[40px] leading-none text-sprossa-green/45">
+                  {num}
+                </div>
+                <h3 className="mb-1.5 text-[17px] font-extrabold text-sprossa-ink">
+                  {title}
+                </h3>
+                <p className="text-[14.5px] text-sprossa-muted-strong">{desc}</p>
+                {i < arr.length - 1 && (
+                  <div
+                    aria-hidden="true"
+                    className="absolute right-[-16px] top-[26px] hidden h-px w-[calc(100%-48px)] bg-[repeating-linear-gradient(90deg,rgba(38,48,43,.12)_0_6px,transparent_6px_12px)] sm:block"
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -198,31 +367,45 @@ export default function HomePage() {
       </section>
 
       {/* ═══ CTA ═══ */}
-      <section id="cta" className="text-center pt-24 pb-28 bg-sprossa-sage">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="font-display text-3xl sm:text-4xl max-w-xl mx-auto mb-4">
-            Schluss mit der „Was-kochen-wir-Frage".
-          </h2>
-          <p className="text-sprossa-muted mb-7">
-            Sei unter den Ersten – sicher dir Early Access und spare dir ab dem Launch die Woche.
-          </p>
-        </div>
-      </section>
-
-      {/* ═══ Footer (Impressum + Datenschutz, DSGVO-Pflicht) ═══ */}
-      <footer className="border-t border-sprossa-ink/10 pt-10 pb-12">
-        <div className="flex justify-between flex-wrap gap-3 text-sm text-sprossa-muted">
-          <span>🌱 Sprossa · euer Monat, klug geplant</span>
-          <div className="flex gap-5 flex-wrap">
-            <a href="/datenschutz" className="text-sprossa-green font-semibold no-underline">Datenschutz</a>
-            <a href="/impressum" className="text-sprossa-green font-semibold no-underline">Impressum</a>
-            <a href="/agb" className="text-sprossa-green font-semibold no-underline">AGB</a>
+      <div className="mx-auto max-w-[1080px] px-6">
+        <section className="py-16 text-center">
+          <div className="rounded-[22px] bg-sprossa-sage px-5 py-11">
+            <h2 className="mx-auto mb-3 max-w-[18em] font-display text-[clamp(26px,3.6vw,36px)] font-semibold leading-[1.15] text-balance text-sprossa-ink">
+              Schluss mit der „Was-kochen-wir“-Frage.
+            </h2>
+            <p className="mx-auto mb-6 max-w-[36em] text-sprossa-muted-strong">
+              Seid unter den Ersten – sichert euch Early Access und spart euch ab dem
+              Launch jede Woche die Planung.
+            </p>
+            <button
+              type="button"
+              onClick={focusEmail}
+              className="rounded-[14px] bg-sprossa-green px-8 py-4 text-[17px] font-extrabold text-white transition hover:bg-sprossa-dark active:translate-y-px"
+            >
+              Early Access sichern
+            </button>
+            <p className="mt-3 text-[12.5px] text-sprossa-muted-strong">
+              Kostenlos zum Launch · Kein Spam · Jederzeit abbestellbar
+            </p>
           </div>
-        </div>
-        <div className="mt-3 text-xs text-sprossa-muted opacity-80">
-          © Sprossa. Alle Rechte vorbehalten.
-        </div>
-      </footer>
-    </div>
+
+          {/* ═══ Footer ═══ */}
+          <footer className="mt-0 flex flex-col justify-between gap-3 border-t border-sprossa-ink/12 pt-6 pb-9 text-[13px] text-sprossa-muted-strong sm:flex-row sm:flex-wrap">
+            <span>Sprossa · euer Monat, klug geplant</span>
+            <nav className="flex flex-wrap gap-[18px]" aria-label="Rechtliches">
+              <a href="/impressum" className="font-bold text-sprossa-dark no-underline hover:underline">
+                Impressum
+              </a>
+              <a href="/datenschutz" className="font-bold text-sprossa-dark no-underline hover:underline">
+                Datenschutz
+              </a>
+              <a href="/agb" className="font-bold text-sprossa-dark no-underline hover:underline">
+                AGB
+              </a>
+            </nav>
+          </footer>
+        </section>
+      </div>
+    </>
   );
 }

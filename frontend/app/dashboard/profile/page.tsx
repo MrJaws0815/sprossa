@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SprossMark from "../../SprossMark";
 import { authHeaders, getApiBase } from "../../lib/auth";
 
 type DietType = "fleisch" | "fisch" | "vegetarisch" | "vegan";
@@ -66,6 +67,8 @@ export default function ProfilePage() {
   const [budgetRange, setBudgetRange] = useState<string | null>(null);
   const [shoppingFrequency, setShoppingFrequency] = useState<string | null>(null);
   const [timeBudget, setTimeBudget] = useState<string | null>(null);
+  const [cookOnceEnabled, setCookOnceEnabled] = useState<boolean>(true);
+  const [shoppingDays, setShoppingDays] = useState<number[]>([]);
 
   // Member portion factors
   const [portionFactors, setPortionFactors] = useState<Record<string, number>>({});
@@ -103,6 +106,8 @@ export default function ProfilePage() {
         setBudgetRange(dp.monthly_budget_range || null);
         setShoppingFrequency(dp.shopping_frequency || null);
         setTimeBudget(dp.time_budget || null);
+        setCookOnceEnabled(dp.cook_once_enabled ?? true);
+        setShoppingDays(dp.shopping_days || []);
 
         const mRes = await fetch(`${getApiBase()}/households/${hh.id}/members`, { headers: authHeaders() });
         if (mRes.ok) {
@@ -124,9 +129,13 @@ export default function ProfilePage() {
 
   async function saveHousehold() {
     if (!householdId) return;
-    setSaving(true);
     setSaveMsg("");
     setError("");
+    if (shoppingFrequency !== "nach_bedarf" && shoppingDays.length === 0) {
+      setError("Bitte mindestens einen Einkaufstag auswählen.");
+      return;
+    }
+    setSaving(true);
     try {
       const dp: any = {
         diet_types: dietTypes,
@@ -137,6 +146,8 @@ export default function ProfilePage() {
         monthly_budget_range: budgetRange,
         shopping_frequency: shoppingFrequency,
         time_budget: timeBudget,
+        cook_once_enabled: cookOnceEnabled,
+        shopping_days: shoppingDays,
       };
       const res = await fetch(`${getApiBase()}/households/${householdId}`, {
         method: "PUT",
@@ -191,6 +202,24 @@ export default function ProfilePage() {
     else setter([...arr, val]);
   }
 
+  function handleFrequencyChange(f: string) {
+    setShoppingFrequency(f);
+    // Bei Wechsel auf einen Modus mit festen Einkaufstagen: nie leer lassen.
+    if (f !== "nach_bedarf" && shoppingDays.length === 0) {
+      setShoppingDays([1]); // Montag als Default
+    }
+  }
+
+  function toggleShoppingDay(day: number) {
+    setShoppingDays((prev) => {
+      if (prev.includes(day)) {
+        if (prev.length <= 1) return prev; // Mindestens 1 Tag
+        return prev.filter((d) => d !== day);
+      }
+      return [...prev, day].sort((a, b) => a - b);
+    });
+  }
+
   if (loading) return (
     <section className="py-8">
       <div className="space-y-6 p-8">
@@ -204,7 +233,7 @@ export default function ProfilePage() {
   return (
     <section className="py-8">
       <div className="mb-4"><Link href="/dashboard" className="text-sprossa-green text-sm">← Zurück zum Dashboard</Link></div>
-      <h1 className="mb-6 font-display text-3xl font-bold text-sprossa-ink">👤 Profil – {householdName}</h1>
+      <h1 className="mb-6 flex items-center gap-2 font-display text-3xl font-bold text-sprossa-ink"><SprossMark size={26} color="#3A7D44" /><span>Profil – {householdName}</span></h1>
 
       {/* ═══ Sektion 1: Haushalt & Mitglieder ═══ */}
       <div className="mb-8 rounded-xl border border-sprossa-ink/10 bg-white p-6">
@@ -222,12 +251,12 @@ export default function ProfilePage() {
             </li>
           ))}
         </ul>
-        <div className="flex gap-3">
-          <input type="text" placeholder="Name" className="rounded-xl border border-sprossa-muted/20 px-4 py-2 text-sprossa-ink"
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <input type="text" placeholder="Name" className="w-full rounded-xl border border-sprossa-muted/20 px-4 py-2 text-sprossa-ink sm:w-auto"
             value={newName} onChange={(e) => setNewName(e.target.value)} />
-          <input type="number" placeholder="Alter" className="w-20 rounded-xl border border-sprossa-muted/20 px-4 py-2 text-sprossa-ink"
+          <input type="number" placeholder="Alter" className="w-full rounded-xl border border-sprossa-muted/20 px-4 py-2 text-sprossa-ink sm:w-24"
             value={newAge || ""} onChange={(e) => setNewAge(parseInt(e.target.value) || null)} />
-          <button onClick={addMember} className="rounded-xl bg-sprossa-green px-4 py-2 font-bold text-white hover:bg-sprossa-dark">Hinzufügen</button>
+          <button onClick={addMember} className="w-full rounded-xl bg-sprossa-green px-4 py-2 font-bold text-white hover:bg-sprossa-dark sm:w-auto">Hinzufügen</button>
         </div>
       </div>
 
@@ -308,12 +337,54 @@ export default function ProfilePage() {
         <div className="mb-4">
           <h3 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">Wie oft kauft ihr ein?</h3>
           <div className="flex flex-wrap gap-2">
-            {(["1x_woche", "2x_woche", "mehrmals_woche", "nach_bedarf"] as string[]).map((f) => (
-              <button key={f} onClick={() => setShoppingFrequency(f)}
+            {([ "1x_woche", "2x_woche", "mehrmals_woche", "nach_bedarf" ] as string[]).map((f) => (
+              <button key={f} onClick={() => handleFrequencyChange(f)}
                 className={(`rounded-xl border-2 px-3 py-2 text-sm font-bold transition-all ${shoppingFrequency === f ? "border-sprossa-green bg-sprossa-green/10 text-sprossa-green" : "border-sprossa-muted/20 bg-white text-sprossa-muted"}`)}>{FREQUENCY_LABELS[f]}</button>
             ))}
           </div>
         </div>
+
+        {/* Cook once - eat twice */}
+        <div className="mb-4">
+          <h3 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">Cook once – eat twice</h3>
+          <p className="mb-2 text-sm text-sprossa-muted">
+            Gerichte werden doppelt gekocht und am übernächsten Tag erneut serviert – spart Zeit und Geld.
+          </p>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={cookOnceEnabled}
+              onChange={(e) => setCookOnceEnabled(e.target.checked)}
+              className="h-5 w-5 accent-sprossa-green"
+            />
+            <span className="text-sm text-sprossa-ink">{cookOnceEnabled ? "Aktiviert" : "Deaktiviert"}</span>
+          </label>
+        </div>
+
+        {/* Einkaufstage */}
+        {shoppingFrequency !== "nach_bedarf" && (
+          <div className="mb-4">
+            <h3 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">Einkaufstage</h3>
+            <p className="mb-2 text-sm text-sprossa-muted">
+              Die Einkaufsliste wird nach deinen Einkaufstagen aufgeteilt.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => toggleShoppingDay(d)}
+                  className={`rounded-xl border-2 px-3 py-2 text-sm font-bold transition-all ${
+                    shoppingDays.includes(d)
+                      ? "border-sprossa-green bg-sprossa-green/10 text-sprossa-green"
+                      : "border-sprossa-muted/20 bg-white text-sprossa-muted"
+                  }`}
+                >
+                  {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][d - 1]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Portions-Faktoren */}
         <div className="mb-4">

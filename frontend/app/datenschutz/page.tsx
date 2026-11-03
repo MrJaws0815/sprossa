@@ -61,10 +61,10 @@ export default function DatenschutzPage() {
       <h2 className="text-xl font-bold mt-6 mb-3">10. Keine Weitergabe an Dritte</h2>
       <p>Ohne Ihre ausdrückliche Einwilligung geben wir Ihre personenbezogenen Daten nicht an Dritte weiter.</p>
 
-      <hr className="mt-10 border-sprossa-muted/20" />
-      <p className="text-sm text-sprossa-muted">Stand: Oktober 2026</p>
+      <hr className="mt-10 border-sprossa-ink/12" />
+      <p className="text-sm text-sprossa-muted-strong">Stand: Oktober 2026</p>
       <div className="mt-6">
-        <Link href="/" className="text-sprossa-green">← Zurück zur Startseite</Link>
+        <Link href="/" className="font-semibold text-sprossa-green underline">← Zurück zur Startseite</Link>
       </div>
     </article>
   );

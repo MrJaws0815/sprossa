@@ -57,6 +57,16 @@ mkdir -p "$OUT/_next"
 cp .next-build/server/app/index.html "$OUT/index.html"
 cp -r .next-build/static/. "$OUT/_next/static/"
 
+# Rechtsseiten als eigene Routen mit ausliefern (/impressum/, /datenschutz/, /agb/)
+for page in impressum datenschutz agb; do
+  if [ -f ".next-build/server/app/$page.html" ]; then
+    mkdir -p "$OUT/$page"
+    cp ".next-build/server/app/$page.html" "$OUT/$page/index.html"
+  else
+    echo "[landing-build] WARNUNG: $page.html wurde nicht erzeugt" >&2
+  fi
+done
+
 # public/ (favicon.svg etc.) mitnehmen, falls vorhanden
 if [ -d public ]; then
   cp -r public/. "$OUT/"

@@ -30,5 +30,5 @@ grep -q 'Sprossa-Landingpage-Build:' /tmp/landing_live.html && echo "  ✓ Build
 grep -q 'viewBox="0 0 100 130"' /tmp/landing_live.html && echo "  ✓ Spross-SVG live" || { echo "  ✗ Spross-SVG fehlt live" >&2; exit 1; }
 CSS="$(grep -o '/_next/static/css/[^"?]*' /tmp/landing_live.html | head -1)"
 curl -s -m 20 "https://sprossa.de$CSS" | grep -q Fraunces && echo "  ✓ Fraunces im Live-CSS" || { echo "  ✗ Fraunces fehlt im Live-CSS" >&2; exit 1; }
-grep -q 'flex-col sm:flex-row' /tmp/landing_live.html && echo "  ✓ Mobil gestapeltes Formular live" || echo "  ! Formular-Klasse nicht gefunden"
+grep -q 'flex-col gap-3 sm:flex-row' /tmp/landing_live.html && echo "  ✓ Mobil gestapeltes Formular live" || echo "  ! Formular-Klasse nicht gefunden"
 echo "[landing-deploy] OK – Backup: /root/landing_backup_${TS}.tgz"

@@ -2,13 +2,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SprossMark from "../SprossMark";
 import { authHeaders, getApiBase } from "../lib/auth";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [stats, setStats] = useState({ recipes: 0, weeksPlanned: 0, groceryItems: 0 });
+  const [stats, setStats] = useState({ plannedRecipes: 0, weeksPlanned: 0, groceryItems: 0 });
   const [planCount, setPlanCount] = useState(0);
-  const [weeklyMeals, setWeeklyMeals] = useState<{ day: string; meal: string }[]>([]);
+  const [weeklyMeals, setWeeklyMeals] = useState<{ day: string; meal: string; servings?: number | null; recipe_id?: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -20,31 +21,50 @@ export default function DashboardPage() {
     try {
       const headers = authHeaders();
 
-      const recipesRes = await fetch(`${getApiBase()}/recipes`, { headers });
+      const recipesRes = await fetch(`${getApiBase()}/recipes?planned_only=true`, { headers });
       if (recipesRes.ok) {
-        const recipes = await recipesRes.json();
-        setStats((s) => ({ ...s, recipes: recipes.length }));
+        const planned = await recipesRes.json();
+        const plannedList: any[] = Array.isArray(planned)
+          ? planned
+          : (planned?.items ?? planned?.recipes ?? []);
+        const plannedCount =
+          !Array.isArray(planned) && typeof planned?.total === "number"
+            ? planned.total
+            : plannedList.length;
+        setStats((s) => ({ ...s, plannedRecipes: plannedCount }));
       }
 
       const plansRes = await fetch(`${getApiBase()}/plans`, { headers });
       if (plansRes.ok) {
-        const plans = await plansRes.json();
+        const plans: any[] = await plansRes.json();
         setPlanCount(plans.length);
         setStats((s) => ({ ...s, weeksPlanned: plans.length * 4 }));
 
         if (plans.length > 0) {
-          const weeksRes = await fetch(`${getApiBase()}/plans/${plans[0].id}/weeks`, { headers });
-          if (weeksRes.ok) {
-            const weeks = await weeksRes.json();
-            if (weeks.length > 0) {
-              const slots = weeks[0].meal_slots || [];
-              const dayNames = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
-              setWeeklyMeals(
-                slots.map((s: any) => ({
-                  day: dayNames[s.day_of_week - 1] || `Tag ${s.day_of_week}`,
-                  meal: "🍽 Rezept",
-                }))
-              );
+          // Vorschau: aktuellen Monat bevorzugen, sonst neuester Plan
+          const now = new Date();
+          const currentMonth = now.getMonth() + 1;
+          const currentYear = now.getFullYear();
+          const target =
+            plans.find((p) => p.month === currentMonth && p.year === currentYear) ??
+            [...plans].sort((a, b) => (b.year - a.year) || (b.month - a.month))[0];
+
+          if (target) {
+            const weeksRes = await fetch(`${getApiBase()}/plans/${target.id}/weeks`, { headers });
+            if (weeksRes.ok) {
+              const weeks: any[] = await weeksRes.json();
+              if (weeks.length > 0) {
+                const slots = weeks[0].meal_slots || [];
+                const dayNames = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+                setWeeklyMeals(
+                  slots.map((s: any) => ({
+                    day: dayNames[s.day_of_week - 1] || `Tag ${s.day_of_week}`,
+                    meal: s.recipe_title || "Rezept",
+                    servings: s.recipe_servings ?? null,
+                    recipe_id: s.recipe_id ?? null,
+                  }))
+                );
+              }
             }
           }
         }
@@ -57,7 +77,7 @@ export default function DashboardPage() {
         setStats((s) => ({ ...s, groceryItems: total }));
       }
     } catch (e) {
-      setStats({ recipes: 0, weeksPlanned: 0, groceryItems: 0 });
+      setStats({ plannedRecipes: 0, weeksPlanned: 0, groceryItems: 0 });
       setError("Dashboard-Daten konnten nicht geladen werden");
     } finally {
       setLoading(false);
@@ -93,7 +113,7 @@ export default function DashboardPage() {
   return (
     <section className="py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold text-sprossa-ink">📊 Dashboard</h1>
+        <h1 className="flex items-center gap-2 font-display text-3xl font-bold text-sprossa-ink"><SprossMark size={26} color="#3A7D44" /><span>Dashboard</span></h1>
         <div className="flex gap-3">
           <Link href="/dashboard/profile" className="rounded-lg border border-sprossa-green px-4 py-2 text-sm text-sprossa-green">
             👤 Profil
@@ -110,8 +130,8 @@ export default function DashboardPage() {
       <div className="mb-8 grid gap-4 md:grid-cols-3">
         <a href="/dashboard/recipes" className="group rounded-xl border border-sprossa-ink/10 bg-white p-5 text-center transition-all hover:shadow-md hover:border-sprossa-green/40 cursor-pointer">
           <div className="mb-1 text-3xl">📖</div>
-          <div className="mb-1 font-display text-2xl font-bold text-sprossa-ink group-hover:text-sprossa-green transition-colors">{stats.recipes}</div>
-          <div className="text-sm text-sprossa-muted">Rezepte</div>
+          <div className="mb-1 font-display text-2xl font-bold text-sprossa-ink group-hover:text-sprossa-green transition-colors">{stats.plannedRecipes}</div>
+          <div className="text-sm text-sprossa-muted">Rezepte im Plan</div>
         </a>
         <a href="/dashboard/plan" className="group rounded-xl border border-sprossa-ink/10 bg-white p-5 text-center transition-all hover:shadow-md hover:border-sprossa-green/40 cursor-pointer">
           <div className="mb-1 text-3xl">📅</div>
@@ -145,7 +165,20 @@ export default function DashboardPage() {
             return (
               <div key={day} className="flex items-center justify-between border-b border-sprossa-ink/10 pb-2">
                 <span className="font-medium text-sprossa-ink">{day}</span>
-                <span className="text-sm text-sprossa-muted">{meal ? meal.meal : "📅 Noch kein Plan"}</span>
+                <span className="text-sm text-sprossa-muted">
+                  {meal ? (
+                    <>
+                      🍽 {meal.recipe_id ? (
+                        <Link href={`/dashboard/recipes/${meal.recipe_id}`} className="hover:underline">
+                          {meal.meal}
+                        </Link>
+                      ) : (
+                        meal.meal
+                      )}
+                      {meal.servings ? <span className="text-sprossa-muted/70"> · {meal.servings} Port.</span> : null}
+                    </>
+                  ) : "📅 Noch kein Plan"}
+                </span>
               </div>
             );
           })}

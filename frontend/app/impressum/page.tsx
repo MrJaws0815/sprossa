@@ -18,7 +18,7 @@ export default function ImpressumPage() {
       <p>Sebastian Westhoff</p>
 
       <h2 className="text-xl font-bold mt-6 mb-3">Kontakt</h2>
-      <p>E-Mail: <a href="mailto:hallo@sprossa.de" className="text-sprossa-green">hallo@sprossa.de</a></p>
+      <p className="text-sprossa-muted-strong">E-Mail: <a href="mailto:hallo@sprossa.de" className="font-semibold text-sprossa-green underline">hallo@sprossa.de</a></p>
 
       <h2 className="text-xl font-bold mt-6 mb-3">Umsatzsteuer-ID</h2>
       <p>Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: DE335535698</p>
@@ -26,7 +26,7 @@ export default function ImpressumPage() {
       <h2 className="text-xl font-bold mt-6 mb-3">EU-Streitschlichtung</h2>
       <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit: <a href="https://ec.europa.eu/consumers/odr/" className="text-sprossa-green">https://ec.europa.eu/consumers/odr/</a>. Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
 
-      <hr className="mt-10 border-sprossa-muted/20" />
+      <hr className="mt-10 border-sprossa-ink/12" />
 
       <div className="mt-6">
         <Link href="/" className="text-sprossa-green">← Zurück zur Startseite</Link>
