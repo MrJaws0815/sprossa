@@ -29,11 +29,14 @@ async def create_household(
         name=body.name,
         user_id=UUID(user_id),
         dietary_profile=body.dietary_profile or {},
+        # Art. 9 DSGVO: Zeitstempel nur setzen, wenn Einwilligung erteilt wurde.
+        health_data_consent_at=datetime.now(UTC) if body.health_data_consent else None,
     )
     return HouseholdOut(
         id=household.id,
         name=household.name,
         dietary_profile=household.dietary_profile or {},
+        health_data_consent_at=household.health_data_consent_at,
         created_at=household.created_at,
     )
 
@@ -54,14 +57,26 @@ async def update_household(
         updates["name"] = body.name
     if body.dietary_profile is not None:
         updates["dietary_profile"] = body.dietary_profile
+    # Art. 9 DSGVO: Einwilligung setzen (Zeitstempel nur beim ersten Mal) bzw. widerrufen.
+    if body.health_data_consent is True and household.health_data_consent_at is None:
+        updates["health_data_consent_at"] = datetime.now(UTC)
+    if body.health_data_consent_revoked is True:
+        # Nachweis der Einwilligung bleibt erhalten; Widerruf wird im Profil dokumentiert.
+        dp = dict(household.dietary_profile or {})
+        dp["health_data_consent_revoked_at"] = datetime.now(UTC).isoformat()
+        updates["dietary_profile"] = dp
 
     if updates:
-        household = await repo.update(hid, **updates)
+        updated = await repo.update(hid, **updates)
+        if updated is None:
+            raise HTTPException(status_code=404, detail="Haushalt nicht gefunden")
+        household = updated
 
     return HouseholdOut(
         id=household.id,
         name=household.name,
         dietary_profile=household.dietary_profile or {},
+        health_data_consent_at=household.health_data_consent_at,
         created_at=household.created_at,
     )
 
@@ -78,6 +93,7 @@ async def list_households(
             id=h.id,
             name=h.name,
             dietary_profile=h.dietary_profile or {},
+            health_data_consent_at=h.health_data_consent_at,
             created_at=h.created_at,
         )
         for h in households
@@ -95,6 +111,7 @@ async def get_household(
         id=household.id,
         name=household.name,
         dietary_profile=household.dietary_profile or {},
+        health_data_consent_at=household.health_data_consent_at,
         created_at=household.created_at,
     )
 

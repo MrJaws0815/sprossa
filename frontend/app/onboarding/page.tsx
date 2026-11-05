@@ -109,6 +109,9 @@ export default function OnboardingPage() {
   // Step 2 – Diet type, allergies, cuisines, dislikes
   const [dietTypes, setDietTypes] = useState<DietType[]>([]);
   const [allergies, setAllergies] = useState<Allergy[]>([]);
+  // Art. 9 DSGVO: Allergien sind Gesundheitsdaten – Einwilligung ist Pflicht,
+  // sobald Allergien ausgewaehlt sind. Wird an das Backend uebergeben.
+  const [healthDataConsent, setHealthDataConsent] = useState(false);
   const [cuisines, setCuisines] = useState<Cuisine[]>([]);
   const [dislikedIngredients, setDislikedIngredients] = useState("");
 
@@ -189,7 +192,10 @@ export default function OnboardingPage() {
     const res = await fetch(`${getApiBase()}/households/${hid}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ dietary_profile: dietaryProfile }),
+      body: JSON.stringify({
+        dietary_profile: dietaryProfile,
+        health_data_consent: healthDataConsent,
+      }),
     });
     if (!res.ok) {
       throw new Error("Ernährungsprofil konnte nicht gespeichert werden");
@@ -204,8 +210,15 @@ export default function OnboardingPage() {
       body: JSON.stringify({ month: now.getMonth() + 1, year: now.getFullYear() }),
     });
     if (!res.ok) {
-      // Non-fatal – user can generate later from dashboard
-      setPlanResult("⚠️ Plan konnte nicht automatisch erstellt werden. Du kannst ihn später im Dashboard generieren.");
+      // Non-fatal – user can generate later from dashboard.
+      // 422 = fehlende Art.-9-Einwilligung: Grund anzeigen statt generischer Meldung.
+      const msg = await res.json().catch(() => ({}));
+      const detail = (msg as any).detail;
+      setPlanResult(
+        typeof detail === "string"
+          ? `⚠️ ${detail}`
+          : "⚠️ Plan konnte nicht automatisch erstellt werden. Du kannst ihn später im Dashboard generieren."
+      );
       return;
     }
     const data = await res.json();
@@ -221,7 +234,9 @@ export default function OnboardingPage() {
         const valid = members.filter((m) => m.name.trim().length > 0);
         return valid.length >= 1 && valid.length <= 8;
       }
-      case 2: return dietTypes.length > 0; // allergies, cuisines, dislikes optional
+      // Ess-Typ ist Pflicht. Allergien sind optional – aber sobald welche
+      // ausgewaehlt sind, ist die Art.-9-Einwilligung zwingend.
+      case 2: return dietTypes.length > 0 && (allergies.length === 0 || healthDataConsent);
       case 3: return supermarket !== null && budgetRange !== null && shoppingFrequency !== null;
       case 4: return timeBudget !== null;
       case 5: return true;
@@ -533,6 +548,39 @@ export default function OnboardingPage() {
               ))}
             </div>
           </div>
+
+          {allergies.length > 0 && (
+            <div className="rounded-xl border border-sprossa-terracotta/40 bg-sprossa-terracotta/5 p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={healthDataConsent}
+                  onChange={(e) => setHealthDataConsent(e.target.checked)}
+                  className="mt-0.5 size-5 shrink-0 accent-sprossa-terracotta"
+                />
+                <span className="text-sm text-sprossa-ink">
+                  Ich willige ausdrücklich ein, dass meine Allergie- und
+                  Unverträglichkeitsangaben (Gesundheitsdaten nach Art. 9 DSGVO) zur
+                  Erstellung meines Ernährungsplans verarbeitet werden. Diese
+                  Einwilligung kann ich jederzeit im Profil widerrufen.{" "}
+                  <a
+                    href="/datenschutz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold underline"
+                  >
+                    Datenschutzerklärung
+                  </a>
+                </span>
+              </label>
+              {!healthDataConsent && (
+                <p className="mt-2 text-xs font-semibold text-sprossa-terracotta">
+                  Ohne Einwilligung können wir keine Allergien berücksichtigen –
+                  bitte bestätigen oder Allergien abwählen.
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <h2 className="mb-2 font-display text-lg font-semibold text-sprossa-ink">🍳 Küchen-Präferenzen</h2>

@@ -51,12 +51,16 @@ class UserOut(BaseModel):
 class HouseholdCreate(BaseModel):
     name: str
     dietary_profile: Optional[dict] = {}
+    # Art. 9 DSGVO: Einwilligung in die Verarbeitung von Gesundheitsdaten (Allergien).
+    # Der Server setzt daraus einen Zeitstempel; das Flag selbst wird nicht gespeichert.
+    health_data_consent: bool = False
 
 
 class HouseholdOut(BaseModel):
     id: UUID
     name: str
     dietary_profile: Optional[dict] = {}
+    health_data_consent_at: Optional[datetime] = None
     created_at: datetime
 
     class Config:
@@ -256,6 +260,10 @@ class WeeklyPlanOut(BaseModel):
 class HouseholdUpdate(BaseModel):
     name: Optional[str] = None
     dietary_profile: Optional[dict] = None
+    # Art. 9 DSGVO: Einwilligung in Gesundheitsdaten (Allergien). True setzt einmalig
+    # den Zeitstempel; False widerruft (Zeitstempel bleibt als Nachweis erhalten).
+    health_data_consent: Optional[bool] = None
+    health_data_consent_revoked: Optional[bool] = None
 
     @model_validator(mode="after")
     def _validate_shopping_days(self):

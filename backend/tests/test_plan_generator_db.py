@@ -859,3 +859,53 @@ async def test_shopping_days_leer_erzeugt_eine_liste_pro_woche(db, demo_househol
 
     num_weeks = weeks_in_month(6, 2026)
     assert len(grocery_lists) == num_weeks
+
+
+@pytest.mark.asyncio
+async def test_plan_generation_blocked_without_health_data_consent(db, demo_household):
+    """Art. 9 DSGVO: Allergien ohne Einwilligung -> 422 statt stiller Verarbeitung."""
+    from datetime import datetime, UTC
+    from fastapi import HTTPException
+    from app.schemas.api import MonthlyPlanCreate
+    from app.routes.family import generate_plan as generate_plan_route
+
+    household = demo_household["household"]
+    household.dietary_profile = {"allergies": ["nüsse"]}
+    household.health_data_consent_at = None
+    await db.flush()
+
+    body = MonthlyPlanCreate(month=11, year=2026)
+    with pytest.raises(HTTPException) as excinfo:
+        await generate_plan_route(
+            body=body, user_id=str(demo_household["user"].id), db=db
+        )
+    assert excinfo.value.status_code == 422
+    assert "Einwilligung" in excinfo.value.detail
+
+    # Nach Erteilung der Einwilligung muss die Generierung durchlaufen.
+    household.health_data_consent_at = datetime.now(UTC)
+    await db.flush()
+
+    result = await generate_plan_route(
+        body=body, user_id=str(demo_household["user"].id), db=db
+    )
+    assert result["plan_id"]
+    assert result["weeks"] >= 1
+
+
+@pytest.mark.asyncio
+async def test_plan_generation_without_allergies_needs_no_consent(db, demo_household):
+    """Ohne Gesundheitsdaten (keine Allergien) ist keine Einwilligung erforderlich."""
+    from app.schemas.api import MonthlyPlanCreate
+    from app.routes.family import generate_plan as generate_plan_route
+
+    household = demo_household["household"]
+    household.dietary_profile = {"shopping_frequency": "1x_woche"}
+    household.health_data_consent_at = None
+    await db.flush()
+
+    body = MonthlyPlanCreate(month=11, year=2026)
+    result = await generate_plan_route(
+        body=body, user_id=str(demo_household["user"].id), db=db
+    )
+    assert result["plan_id"]

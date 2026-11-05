@@ -251,6 +251,22 @@ async def generate_plan(
     member_repo = MemberRepository(db)
     members = await member_repo.get_by_household(household_id)
 
+    # ── Art. 9 DSGVO: Einwilligung vor Verarbeitung von Gesundheitsdaten pruefen ──
+    # Allergien (Haushalt oder Mitglieder) sind Gesundheitsdaten. Ohne dokumentierte
+    # Einwilligung darf kein Plan generiert werden, der sie verarbeitet.
+    profile_allergies = (household.dietary_profile or {}).get("allergies") or []
+    member_allergies = [a for m in members if m.is_active for a in (m.allergies or [])]
+    has_health_data = bool(profile_allergies or member_allergies)
+    if has_health_data and household.health_data_consent_at is None:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "Fuer die Verarbeitung von Allergie-Angaben (Gesundheitsdaten nach "
+                "Art. 9 DSGVO) fehlt die ausdrueckliche Einwilligung. Bitte im Profil "
+                "erteilen, dann Plan erneut generieren."
+            ),
+        )
+
     # ── Task 21: Portions-Faktor berechnen ──
     member_dicts = [
         {

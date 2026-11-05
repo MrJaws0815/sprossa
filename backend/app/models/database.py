@@ -74,6 +74,10 @@ class Household(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     dietary_profile: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, default=dict)
+    # Art. 9 DSGVO: Allergien sind Gesundheitsdaten. Zeitstempel der ausdruecklichen
+    # Einwilligung; NULL = keine Einwilligung erteilt. Wird nie automatisch zurueckgesetzt,
+    # damit der Nachweis erhalten bleibt (Widerruf = separater Vorgang).
+    health_data_consent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     owner: Mapped["User"] = relationship("User", back_populates="households")
