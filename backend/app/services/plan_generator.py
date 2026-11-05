@@ -503,6 +503,73 @@ def _filter_by_allergens(
     return filtered
 
 
+def _parse_dislikes(dietary_profile: dict) -> set[str]:
+    """Liest Abneigungen aus dem Profil und normalisiert sie.
+
+    Frontend liefert `disliked_ingredients` als kommaseparierten String
+    (z.B. "Pilze, Rosenkohl"). Listen und Strings werden beide akzeptiert.
+    Rückgabe: Set aus kleingeschriebenen, getrimmten Begriffen.
+    """
+    profile = dietary_profile or {}
+    if not isinstance(profile, dict):
+        return set()
+    raw = profile.get("disliked_ingredients")
+    if raw is None:
+        raw = profile.get("dislikes")
+    if isinstance(raw, str):
+        parts = raw.replace("\n", ",").split(",")
+    elif isinstance(raw, (list, tuple)):
+        parts = list(raw)
+    else:
+        return set()
+    return {str(p).strip().lower() for p in parts if str(p).strip()}
+
+
+def _filter_by_dislikes(
+    recipes: list[Recipe],
+    disliked: set[str],
+    ing_id_to_name: dict[UUID, str],
+    recipe_ing_ids: dict[UUID, list[UUID]],
+    min_pool: int = 20,
+) -> list[Recipe]:
+    """Abneigungen = WEICHE Regel: bevorzugt meiden, aber nicht blockieren.
+
+    - Rezepte ohne Abneigung bleiben immer im Pool.
+    - Rezepte mit Abneigung werden nur dann ausgeschlossen, wenn danach
+      noch genug Auswahl übrig bleibt (>= min_pool). Sonst bleiben sie
+      als Fallback drin — der Plan darf nicht an Geschmack scheitern.
+    """
+    if not disliked:
+        return recipes
+
+    # Keywords defensiv normalisieren: Aufrufer soll _parse_dislikes nutzen,
+    # aber ein roher String/Set (z.B. {"PILZE"}) darf den Filter nicht aushebeln.
+    disliked = {str(k).strip().lower() for k in disliked if str(k).strip()}
+    if not disliked:
+        return recipes
+
+    clean: list[Recipe] = []
+    disliked_hits: list[Recipe] = []
+    for r in recipes:
+        hit = False
+        for ing_id in recipe_ing_ids.get(r.id, []):
+            ing_name = (ing_id_to_name.get(ing_id, "") or "").strip().lower()
+            if not ing_name:
+                continue
+            if _ingredient_matches(ing_name, disliked):
+                hit = True
+                break
+        if hit:
+            disliked_hits.append(r)
+        else:
+            clean.append(r)
+
+    if len(clean) >= min_pool:
+        return clean
+    # Zu kleiner Pool → Abneigungen als Präferenz behandeln, nicht als Sperre.
+    return recipes
+
+
 # ─── Task 19 – Abwechslungs-Rad ────────────────────────────────────────────
 
 async def _get_recent_recipe_ids(
@@ -935,6 +1002,16 @@ async def generate_and_persist_monthly_plan(
                 status_code=400,
                 detail=f"Keine Rezepte für die Allergene {member_allergies} gefunden. Bitte passe die Allergien an.",
             )
+
+    # ── Schritt 2a2: Abneigungen (Task 35) – weiche Regel ──
+    # Geschmackliche Ablehnung darf den Plan nicht blockieren: Rezepte mit
+    # Abneigung fliegen nur raus, wenn danach noch genug Auswahl bleibt.
+    disliked = _parse_dislikes(config.dietary_profile or {})
+    if disliked:
+        ing_id_to_name_d, recipe_ing_ids_d, _ = _build_ingredient_index(filtered)
+        filtered = _filter_by_dislikes(
+            filtered, disliked, ing_id_to_name_d, recipe_ing_ids_d,
+        )
 
     # ── Schritt 2b: Fokus-Tags (Task 51) ──
     if config.focus_tags:
