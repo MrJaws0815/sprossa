@@ -57,11 +57,21 @@ export default function RootLayout({
   return (
     <html lang="de">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        {/* Schriften liegen lokal in /public/fonts (kein Google-Request
+            zur Laufzeit – die IP der Nutzer geht nicht an Google). */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fraunces:wght@400;600;700&display=swap"
-          rel="stylesheet"
+          rel="preload"
+          href="/fonts/fraunces-600-normal-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin=""
+        />
+        <link
+          rel="preload"
+          href="/fonts/nunito-400-normal-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin=""
         />
       </head>
       <body className="antialiased bg-sprossa-cream text-sprossa-ink">
