@@ -63,6 +63,8 @@ class User(Base):
     reset_token_expires: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    # Nachweis der Zustimmung zu AGB und Datenschutz bei der Registrierung.
+    terms_accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     households: Mapped[list["Household"]] = relationship("Household", back_populates="owner")
 

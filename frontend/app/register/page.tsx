@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,18 +22,19 @@ export default function RegisterPage() {
 
     if (confirm !== password) { setMsg("❌ Passwörter stimmen nicht überein"); return; }
     if (password.length < 8) { setMsg("❌ Mindestens 8 Zeichen"); return; }
+    if (!accepted) { setMsg("❌ Bitte AGB und Datenschutz akzeptieren"); return; }
 
     setLoading(true);
     try {
       const r = await fetch(`${API}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, display_name: name }),
+        body: JSON.stringify({ email, password, display_name: name, accepted_terms: accepted }),
       });
       if (!r.ok) {
         const d = await r.json().catch(() => ({}));
         if (r.status === 409) {
-          setMsg("❌ E-Mail bereits registriert – <a href='/login' class='font-semibold text-sprossa-green'>zum Login</a>");
+          setMsg("❌ E-Mail bereits registriert – bitte zum Login wechseln");
           return;
         }
         setMsg("❌ " + ((d as any).detail || "Fehler"));
@@ -92,9 +94,25 @@ export default function RegisterPage() {
           </div>
         </div>
 
+        <label className="flex items-start gap-3 rounded-xl border-2 border-sprossa-muted/20 bg-white px-4 py-3 text-sm text-sprossa-ink cursor-pointer">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-1 size-4 shrink-0 accent-sprossa-green"
+            required
+          />
+          <span>
+            Ich akzeptiere die{" "}
+            <a href="/agb" target="_blank" rel="noreferrer" className="font-semibold text-sprossa-green underline">AGB</a>{" "}
+            und die{" "}
+            <a href="/datenschutz" target="_blank" rel="noreferrer" className="font-semibold text-sprossa-green underline">Datenschutzerklärung</a>.
+          </span>
+        </label>
+
         {msg && (
-          <div className="rounded-lg border border-sprossa-error/20 bg-sprossa-error/5 px-4 py-3 text-sm text-sprossa-error font-medium">
-            <span dangerouslySetInnerHTML={{ __html: msg }} />
+          <div className="rounded-lg border border-sprossa-error/20 bg-sprossa-error/5 px-4 py-3 text-sm text-sprossa-error font-medium" role="alert">
+            {msg}
           </div>
         )}
 

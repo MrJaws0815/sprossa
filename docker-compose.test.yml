@@ -46,6 +46,7 @@ services:
       MM_DATABASE_URL: "postgresql+asyncpg://sprossa:sprossa@db:5432/sprossa_test"
       MM_DATABASE_URL_SYNC: "postgresql://sprossa:***@db:5432/sprossa_test"
       MM_SECRET_KEY: "sprossa-TEST-secret-key-281014"
+      MM_COOKIE_SECURE: "false"
       MM_SMTP_HOST: "smtp.strato.de"
       MM_SMTP_PORT: "${MM_SMTP_PORT:-587}"
       MM_SMTP_USE_TLS: "${MM_SMTP_USE_TLS:-true}"

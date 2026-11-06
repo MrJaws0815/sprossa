@@ -1,4 +1,5 @@
 """UserRepository – DB-Zugriff auf Users."""
+from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import select
@@ -19,13 +20,15 @@ class UserRepository(BaseRepository[User]):
         return await self.get_by_field("email", email)
 
     async def create_user(
-        self, email: str, password_hash: str, display_name: str
+        self, email: str, password_hash: str, display_name: str,
+        terms_accepted_at: Optional[datetime] = None,
     ) -> User:
         """Erzeugt einen neuen User."""
         return await self.create(
             email=email,
             password_hash=password_hash,
             display_name=display_name,
+            terms_accepted_at=terms_accepted_at,
         )
 
     async def get_by_stripe_customer(self, stripe_customer_id: str) -> Optional[User]:

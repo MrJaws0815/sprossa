@@ -55,7 +55,7 @@ class TestAuthFlow(unittest.TestCase):
         payload = {
             "email": email,
             "password": "Test1234!",
-            "display_name": "Auth Test User",
+            "display_name": "Auth Test User", "accepted_terms": True,
         }
         r = httpx.post(f"{API_BASE}/auth/register", json=payload, timeout=10)
         self.assertEqual(
@@ -75,7 +75,7 @@ class TestAuthFlow(unittest.TestCase):
         payload = {
             "email": email,
             "password": "Test1234!",
-            "display_name": "Dupe Test",
+            "display_name": "Dupe Test", "accepted_terms": True,
         }
         # Erste Registrierung
         r1 = httpx.post(f"{API_BASE}/auth/register", json=payload, timeout=10)
@@ -96,7 +96,7 @@ class TestAuthFlow(unittest.TestCase):
         # Vorher registrieren
         reg = httpx.post(
             f"{API_BASE}/auth/register",
-            json={"email": email, "password": pw, "display_name": "Login Test"},
+            json={"email": email, "password": pw, "display_name": "Login Test", "accepted_terms": True},
             timeout=10,
         )
         self.assertEqual(reg.status_code, 201)
@@ -122,7 +122,7 @@ class TestAuthFlow(unittest.TestCase):
         # Registrieren
         httpx.post(
             f"{API_BASE}/auth/register",
-            json={"email": email, "password": "RichtigesPW99", "display_name": "Fail Test"},
+            json={"email": email, "password": "RichtigesPW99", "display_name": "Fail Test", "accepted_terms": True},
             timeout=10,
         )
         # Falsches PW
@@ -151,7 +151,7 @@ class TestAuthFlow(unittest.TestCase):
         # Registrieren
         reg = httpx.post(
             f"{API_BASE}/auth/register",
-            json={"email": email, "password": "TokenTest77", "display_name": "Me Test"},
+            json={"email": email, "password": "TokenTest77", "display_name": "Me Test", "accepted_terms": True},
             timeout=10,
         )
         token = reg.json()["access_token"]
@@ -194,7 +194,7 @@ class TestAuthFlow(unittest.TestCase):
         # 1. Register
         r1 = httpx.post(
             f"{API_BASE}/auth/register",
-            json={"email": email, "password": "FullFlow99!", "display_name": "Flow Test"},
+            json={"email": email, "password": "FullFlow99!", "display_name": "Flow Test", "accepted_terms": True},
             timeout=10,
         )
         self.assertEqual(r1.status_code, 201)

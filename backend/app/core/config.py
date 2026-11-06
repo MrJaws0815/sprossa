@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     secret_key: str = "change-me-in-production"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24  # 24h
+    # Cookies nur ueber HTTPS senden. In der Test-Instanz laeuft HTTP,
+    # dort wird MM_COOKIE_SECURE=false gesetzt.
+    cookie_secure: bool = True
 
     # Stripe
     stripe_api_key: Optional[str] = None

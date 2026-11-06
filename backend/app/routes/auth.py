@@ -29,6 +29,9 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, description="Mindestens 8 Zeichen")
     display_name: str = Field(min_length=1, max_length=100)
+    # Pflicht: Zustimmung zu AGB und Datenschutzerklaerung. Ohne diese
+    # Checkbox waeren die AGB bei der Registrierung nicht einbezogen.
+    accepted_terms: bool = False
 
 
 class LoginRequest(BaseModel):
@@ -61,17 +64,23 @@ async def register(body: RegisterRequest, response: Response, db: AsyncSession =
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered",
         )
+    if not body.accepted_terms:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Bitte AGB und Datenschutzerklärung akzeptieren.",
+        )
     user = await repo.create_user(
         email=body.email,
         password_hash=hash_password(body.password),
         display_name=body.display_name,
+        terms_accepted_at=datetime.now(UTC),
     )
     token = create_access_token(subject=str(user.id))
     response.set_cookie(
         key="sprossa_token",
         value=token,
         httponly=True,
-        secure=False,       # True in Produktion
+        secure=settings.cookie_secure,
         samesite="lax",
         max_age=86400,      # 24h
         path="/",
@@ -95,7 +104,7 @@ async def login(body: LoginRequest, response: Response, db: AsyncSession = Depen
         key="sprossa_token",
         value=token,
         httponly=True,
-        secure=False,       # True in Produktion
+        secure=settings.cookie_secure,
         samesite="lax",
         max_age=86400,      # 24h
         path="/",
@@ -190,7 +199,7 @@ async def logout(
         key="sprossa_token",
         value="",
         httponly=True,
-        secure=False,
+        secure=settings.cookie_secure,
         samesite="lax",
         max_age=0,      # Cookie sofort löschen
         path="/",

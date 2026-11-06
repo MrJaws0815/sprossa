@@ -79,7 +79,7 @@ def test_e2e_complete_flow():
     payload = {
         "email": email,
         "password": PASSWORD,
-        "display_name": "E2E Test Familie",
+        "display_name": "E2E Test Familie", "accepted_terms": True,
     }
     r = httpx.post(f"{API_BASE}/auth/register", json=payload, timeout=10)
     assert r.status_code == 201, (

@@ -33,7 +33,34 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 # ─── Einfaches JWT (ohne python-jose, HMAC-SHA256) ───────────────────────
 
-_SECRET_KEY = "change-me-in-production"
+
+def _load_secret() -> str:
+    """Liest das Signatur-Secret aus der Umgebung.
+
+    Vorher stand hier ein hartkodiertes "change-me-in-production". Das ist
+    ein oeffentlich bekanntes Secret: Wer es kennt, kann beliebige
+    Sitzungs-Token signieren und sich als jeder Nutzer ausgeben. Das Secret
+    steht in `.env` und in `docker-compose.test.yml` bereits als
+    MM_SECRET_KEY bereit - es wurde nur nie gelesen.
+    """
+    val = (os.environ.get("MM_SECRET_KEY") or os.environ.get("SECRET_KEY") or "").strip()
+    if val and val != "change-me-in-production":
+        return val
+    # Kein Secret konfiguriert: lieber ungueltige Sitzungen nach einem Neustart
+    # als ein weltweit bekanntes Secret. Beim Start sichtbar warnen.
+    import secrets as _secrets
+    import warnings
+
+    warnings.warn(
+        "MM_SECRET_KEY ist nicht gesetzt. Es wird ein zufaelliges Secret erzeugt; "
+        "alle Sitzungen werden bei einem Neustart ungueltig.",
+        RuntimeWarning,
+        stacklevel=2,
+    )
+    return _secrets.token_urlsafe(48)
+
+
+_SECRET_KEY = _load_secret()
 
 
 def encode_jwt(payload: dict, secret: str = _SECRET_KEY) -> str:

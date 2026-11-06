@@ -98,7 +98,7 @@ def main():
     status, data = _req("POST", "/auth/register", {
         "email": user_email,
         "password": user_password,
-        "display_name": "E2E-Test-Familie",
+        "display_name": "E2E-Test-Familie", "accepted_terms": True,
     })
     assert_ok(status, data, "Registrierung")
     token = data.get("access_token")
