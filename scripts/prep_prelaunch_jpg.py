@@ -6,7 +6,7 @@ import sys
 from PIL import Image
 
 SIZE = (1080, 1350)
-BASE = "/home/mrjaws/monatsmenue/dist/social/pre-launch"
+BASE = sys.argv[1] if len(sys.argv) > 1 else "/home/mrjaws/monatsmenue/dist/social/pre-launch"
 
 
 def convert(png_path: str) -> str:
