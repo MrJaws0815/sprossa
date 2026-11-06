@@ -114,9 +114,12 @@ def dezember() -> str:
 # ── Post 2: Drei Gerichte, die Kinder wirklich essen ───────────────────────
 
 DISHES = [
-    ("Currywurst-Sauce mit Pommes", "15 Min", "Der schnellste Abend der Woche.", "Die Kinder können die Würstchen in Stücke schneiden."),
-    ("Frikadellen mit Kartoffelstampf und Gurkensalat", "40 Min", "Der Klassiker, der nie übrig bleibt.", "Die Kinder können die Frikadellen-Masse mit den Händen zu Kugeln formen."),
-    ("Brokkoli-Käse-Gratin mit Knusperkruste", "35 Min", "Gemüse, das tatsächlich gegessen wird.", "Die Kinder können die Kruste aus Paniermehl und Parmesan mischen."),
+    ("Currywurst-Sauce mit Pommes", "15 Min", "Der schnellste Abend der Woche.",
+     "Rührt die Sauce selbst an: Ketchup, Currypulver und Worcestershire in einer Tasse verrühren, erst daran riechen, dann mit dem Finger probieren. Die Würstchen schneiden Schulkinder mit der Küchenschere in Stücke; die Pfanne mit der heissen Butter bleibt bei einem Erwachsenen."),
+    ("Frikadellen mit Kartoffelstampf und Gurkensalat", "40 Min", "Der Klassiker, der nie übrig bleibt.",
+     "Die Hackmasse mit den Händen durchkneten, bis sie zusammenhält — kalt, klebrig und genau das, was Kinder ohnehin tun wollen; daraus acht flache Frikadellen formen und laut mitzählen. Die Pfanne mit dem heissen Rapsöl gehört einem Erwachsenen."),
+    ("Brokkoli-Käse-Gratin mit Knusperkruste", "35 Min", "Gemüse, das tatsächlich gegessen wird.",
+     "Paniermehl und Parmesan mit den Fingern mischen und über den Brokkoli streuen — die Krümel sollen ungleich liegen, das gibt die knusprigen Ecken. Die Käsesauce am Herd rührt ein Erwachsener, sie spritzt beim Schmelzen."),
 ]
 
 
