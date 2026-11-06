@@ -6,7 +6,7 @@ Testet den vollständigen User-Flow:
    2. POST   /auth/login               → 200 + Token
    3. POST   /households                → 201
    4. POST   /households/{id}/members   → 201
-   5. GET    /recipes                   → 200 + 28 Einträge
+   5. GET    /recipes                   → 200 + Rezeptkatalog (>= 28 Seed-Rezepte)
    6. POST   /plans/generate            → 201 + plan_id + grocery_list
    7. GET    /plans                     → 200 + 1 Plan
    8. GET    /plans/{id}/weeks          → 200 + cw (Kalenderwoche)
@@ -195,10 +195,12 @@ def test_e2e_complete_flow():
         f"❌ Schritt 5: Response ist kein Array: {type(recipes).__name__}"
     )
     recipe_count = len(recipes)
-    # Dynamisch statt hartkodiert: DB kann mehr als die 28 Seed-Rezepte enthalten.
-    assert recipe_count > 0, (
-        f"❌ Schritt 5: Keine Rezepte gefunden. "
-        f"Führe aus: cd backend && python3 seed.py"
+    # Dynamisch statt hartkodiert: Der Katalog wächst (aktuell >300 Rezepte),
+    # die 28 Seed-Rezepte sind aber die Untergrenze eines geseedeten Systems.
+    # Ein Vergleich auf exakt 28 war ein Testartefakt, kein Produktfehler.
+    assert recipe_count >= 28, (
+        f"❌ Schritt 5: Nur {recipe_count} Rezepte gefunden (mindestens 28 "
+        f"erwartet). Führe aus: cd backend && python3 seed.py"
     )
     first_title = recipes[0].get("title", "(kein title)")
     last_title = recipes[-1].get("title", "(kein title)")
