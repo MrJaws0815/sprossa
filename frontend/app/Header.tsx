@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import SprossMark from "./SprossMark";
+import FeedbackLink from "./FeedbackLink";
 
 /**
  * Sprossa – Globaler Header (erscheint auf allen Seiten via Layout).
@@ -35,21 +36,24 @@ export default function SprossaHeader() {
             </span>
           </Link>
 
-          {inApp ? (
-            <Link
-              href="/dashboard"
-              className="font-bold text-sm text-sprossa-green no-underline"
-            >
-              Zum Dashboard
-            </Link>
-          ) : (
-            <Link
-              href="/#early-access"
-              className="font-bold text-sm text-sprossa-green no-underline"
-            >
-              Early Access
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            <FeedbackLink kontext={inApp ? "App" : "Landingpage"} variante="header" />
+            {inApp ? (
+              <Link
+                href="/dashboard"
+                className="font-bold text-sm text-sprossa-green no-underline"
+              >
+                Zum Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/#early-access"
+                className="font-bold text-sm text-sprossa-green no-underline"
+              >
+                Early Access
+              </Link>
+            )}
+          </div>
         </nav>
       </div>
     </header>
