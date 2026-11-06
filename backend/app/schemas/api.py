@@ -321,6 +321,11 @@ class GroceryListOut(BaseModel):
     id: UUID
     week_number: Optional[int] = None
     cw: Optional[int] = None  # ISO-Kalenderwoche (Alias zu week_number nach Task 61)
+    # Task 75: ISO-Jahr zur KW. week_number allein ist über einen Jahreswechsel
+    # nicht eindeutig (KW 1 kann zu 2026 oder 2027 gehören), deshalb braucht das
+    # Frontend beides, um die "aktuelle" Liste zu treffen. NULL = unbekannt
+    # (Altbestand ohne Wochen-Startdatum bzw. Monatsliste).
+    iso_year: Optional[int] = None
     is_master_list: bool
     generated_at: datetime
     supermarket: str = "Rewe"

@@ -30,6 +30,7 @@ from app.services.grocery_engine import (
     build_export_txt,
     generate_and_persist_grocery_list,
     grocery_item_display_name,
+    iso_year_by_week,
     sort_by_gang,
 )
 from app.repositories.household import HouseholdRepository
@@ -731,6 +732,9 @@ async def list_grocery_lists(
         supermarket = dp.get("preferred_supermarket", "Rewe")
 
     gi_repo_list = GroceryItemRepository(db)
+    # Task 75: ISO-Jahr je (Plan, KW) einmalig auflösen – kein N+1 und keine
+    # geratene Jahresangabe, wenn ein Plan kein Wochen-Startdatum hat.
+    iso_years = await iso_year_by_week(db, [gl.monthly_plan_id for gl in lists])
     result = []
     for gl in lists:
         # Explizit laden statt Lazy-Load auf gl.items (MissingGreenlet vermeiden)
@@ -757,9 +761,16 @@ async def list_grocery_lists(
         )
         # Task 85: segment_label ist kein DB-Feld. Wir leiten es aus der
         # Position ab, wenn mehrere Listen dieselbe KW teilen (Einkaufstage).
+        # Task 75: Segmentierung gilt nur innerhalb desselben Plans – KW 1 aus
+        # 2026 und KW 1 aus 2027 sind verschiedene Wochen, nicht zwei Segmente.
         _label = getattr(gl, "segment_label", None)
         if _label is None and not gl.is_master_list and gl.week_number is not None:
-            _same_week = [g for g in lists if g.week_number == gl.week_number and not g.is_master_list]
+            _same_week = [
+                g for g in lists
+                if g.week_number == gl.week_number
+                and g.monthly_plan_id == gl.monthly_plan_id
+                and not g.is_master_list
+            ]
             if len(_same_week) > 1:
                 _idx = next((i for i, g in enumerate(_same_week) if g.id == gl.id), 0) + 1
                 _label = f"Einkauf {_idx}/{len(_same_week)}"
@@ -767,6 +778,11 @@ async def list_grocery_lists(
             id=gl.id,
             week_number=gl.week_number,
             cw=gl.week_number,
+            iso_year=(
+                iso_years.get((gl.monthly_plan_id, gl.week_number))
+                if gl.week_number is not None
+                else None
+            ),
             is_master_list=gl.is_master_list,
             generated_at=gl.generated_at,
             supermarket=supermarket,
@@ -822,10 +838,18 @@ async def get_grocery_list(
             name_key="ingredient_name",
             supermarket=supermarket,
         )
+    # Task 75: ISO-Jahr zur gespeicherten KW aus dem Wochen-Startdatum.
+    iso_years = await iso_year_by_week(db, [gl.monthly_plan_id])
+
     return GroceryListOut(
         id=gl.id,
         week_number=gl.week_number,
         cw=gl.week_number,
+        iso_year=(
+            iso_years.get((gl.monthly_plan_id, gl.week_number))
+            if gl.week_number is not None
+            else None
+        ),
         is_master_list=gl.is_master_list,
         generated_at=gl.generated_at,
         supermarket=supermarket,

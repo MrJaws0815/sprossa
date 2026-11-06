@@ -15,7 +15,6 @@ Regeln:
   Abruf automatisch eine aktuelle Liste erzeugt (bzw. hier direkt neu
   generiert).
 """
-from datetime import timedelta
 from typing import Optional
 from uuid import UUID
 
@@ -41,7 +40,10 @@ from app.repositories.plan import (
     MonthlyPlanRepository,
     WeeklyPlanRepository,
 )
-from app.services.grocery_engine import generate_and_persist_grocery_list
+from app.services.grocery_engine import (
+    generate_and_persist_grocery_list,
+    iso_year_week,
+)
 from app.services.plan_generator import (
     _build_ingredient_index,
     _filter_by_allergens,
@@ -216,15 +218,17 @@ async def swap_slot_recipe(
     slot.recipe_id = selected.id
     await db.flush()
 
-    # Task 74/75: ISO-Kalenderwoche aus dem Slot-Datum neu berechnen.
-    if weekly.start_date is not None:
-        slot_date = weekly.start_date + timedelta(days=slot.day_of_week - 1)
-        iso_week = slot_date.isocalendar()[1]
-    else:
-        # Fallback ohne Datum (z. B. in alten Tests): interner Zähler
+    # Task 74: Einkaufslisten tragen die ISO-Kalenderwoche, nicht den internen
+    # Monatszähler (weekly.week_number, 1..5). Maßgeblich ist – genau wie im
+    # Generator (plan_generator.py) – das Startdatum der Woche, damit Swap und
+    # Neu-Generierung dieselbe KW erzeugen. Das Slot-Datum ist ungeeignet:
+    # day_of_week zählt relativ zum Startdatum und kann in einer anderen
+    # ISO-Woche landen (z. B. Woche ab Do 31.12.2026, Slot Tag 5 = Mo 04.01.2027).
+    _iso_year, iso_week = iso_year_week(weekly.start_date)
+    if iso_week is None:
+        # Altbestand ohne Startdatum: einzige verfügbare Information.
         iso_week = weekly.week_number
-    # Hinweis: weekly.week_number bleibt der interne Wochenzaehler (1..5).
-    # Die GroceryList verwendet die ISO-Kalenderwoche.
+    # Hinweis: weekly.week_number bleibt der interne Wochenzähler (1..5).
 
     # ── 8. Einkaufsliste der betroffenen Woche invalidieren/neu erzeugen
     # Da das Modell kein "stale"-Flag hat: bestehende Liste + Items der

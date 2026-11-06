@@ -12,6 +12,7 @@ import csv
 import io
 import re
 from collections import defaultdict
+from datetime import date
 from typing import Iterable, Optional, Sequence
 from uuid import UUID
 
@@ -589,6 +590,52 @@ class GroceryItemBuilder:
         if variants:
             return f"{self.name} ({', '.join(variants)})"
         return self.name
+
+
+# ─── ISO-Kalenderwoche (eine Quelle der Wahrheit, Task 74/75) ─────────────
+
+def iso_year_week(start_date: Optional[date]) -> tuple[Optional[int], Optional[int]]:
+    """Liefert (ISO-Jahr, ISO-Kalenderwoche) eines Datums.
+
+    `week_number` bedeutet an zwei Stellen Unterschiedliches: auf dem
+    WeeklyPlan ist es der interne Monatszähler (1..5), auf der GroceryList
+    die ISO-Kalenderwoche. Deshalb wird die KW überall aus demselben Feld
+    abgeleitet – dem Startdatum der Woche – und zusammen mit dem ISO-Jahr
+    zurückgegeben, damit KW und Jahr nie auseinanderlaufen (Task 74/75).
+    """
+    if start_date is None:
+        return None, None
+    iso = start_date.isocalendar()
+    return iso[0], iso[1]
+
+
+async def iso_year_by_week(
+    db: AsyncSession, monthly_plan_ids: Sequence[UUID]
+) -> dict[tuple[UUID, int], int]:
+    """Bildet (monthly_plan_id, ISO-KW) → ISO-Jahr für Einkaufslisten.
+
+    Eine Einkaufsliste speichert nur die ISO-KW, nicht das ISO-Jahr. Das Jahr
+    ergibt sich eindeutig aus den Wochenplänen des Monatsplans (ein Monat
+    enthält keine KW doppelt). Ohne Startdatum bleibt der Eintrag aus –
+    Aufrufer liefern dann `iso_year=None` statt eines geratenen Jahres.
+    """
+    plan_ids = [pid for pid in monthly_plan_ids if pid is not None]
+    if not plan_ids:
+        return {}
+    rows = await db.execute(
+        select(WeeklyPlan.monthly_plan_id, WeeklyPlan.start_date).where(
+            WeeklyPlan.monthly_plan_id.in_(plan_ids),
+            WeeklyPlan.start_date.is_not(None),
+        )
+    )
+    mapping: dict[tuple[UUID, int], int] = {}
+    for plan_id, start_date in rows.all():
+        iso_year, iso_week = iso_year_week(start_date)
+        if iso_week is None:
+            continue
+        assert iso_year is not None
+        mapping.setdefault((plan_id, iso_week), iso_year)
+    return mapping
 
 
 async def generate_and_persist_grocery_list(

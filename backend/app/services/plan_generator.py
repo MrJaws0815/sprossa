@@ -1140,7 +1140,10 @@ async def generate_and_persist_monthly_plan(
     week_repo = WeeklyPlanRepository(db)
     slot_repo = MealSlotRepository(db)
 
-    from app.services.grocery_engine import generate_and_persist_grocery_list
+    from app.services.grocery_engine import (
+        generate_and_persist_grocery_list,
+        iso_year_week,
+    )
 
     previous_week_ids: set[UUID] = set()
     profile = config.dietary_profile or {}
@@ -1206,13 +1209,16 @@ async def generate_and_persist_monthly_plan(
                 segments = _segment_slots_by_shopping_days(
                     weekly_with_slots.meal_slots, shopping_days
                 )
+                # Eine Quelle der Wahrheit für KW + ISO-Jahr (Task 74/75) –
+                # derselbe Helfer wie im Swap-Pfad.
+                _iso_year, week_iso = iso_year_week(week_start)
                 for segment_label, seg_slots in segments:
                     dummy_plan = _cast(WeeklyPlan, SimpleNamespace(meal_slots=seg_slots))
                     await generate_and_persist_grocery_list(
                         dummy_plan, db,
                         household_id=config.household_id,
                         monthly_plan_id=monthly.id,
-                        week_number=week_start.isocalendar()[1],
+                        week_number=week_iso,
                         supermarket=supermarket,
                         segment_label=segment_label,
                     )
