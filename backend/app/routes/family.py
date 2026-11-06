@@ -3,7 +3,8 @@ from datetime import date
 from uuid import UUID
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -501,13 +502,35 @@ async def list_weekly_plans(
 
 # ─── Grocery-Liste generieren ─────────────────────────────────────────────
 
+class GroceryGenerateRequest(BaseModel):
+    """Optionaler Body für POST /grocery/generate.
+
+    Ohne Body wird wie bisher der neueste Monatsplan des Haushalts genommen.
+    Mit `plan_id` (oder Alias `monthly_plan_id`) wird gezielt dieser Plan
+    befüllt. Unbekannte Felder werden mit 422 abgelehnt, damit ein falsch
+    benannter Parameter nicht wieder still ins Leere läuft.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    plan_id: Optional[UUID] = None
+    monthly_plan_id: Optional[UUID] = None
+
+
 @router.post("/grocery/generate", status_code=201)
 async def generate_grocery(
+    body: Optional[GroceryGenerateRequest] = Body(default=None),
     weekly_plan_id: Optional[UUID] = Query(None),
     user_id: str = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    """Generiert eine Einkaufsliste aus einem WeeklyPlan."""
+    """Generiert eine Einkaufsliste aus einem WeeklyPlan.
+
+    Quellen in dieser Reihenfolge:
+    1. `weekly_plan_id` (Query) — gezielte Woche
+    2. `plan_id` / `monthly_plan_id` (Body) — gezielter Monatsplan
+    3. keiner von beiden — neuester Monatsplan des Haushalts
+    """
     week_repo = WeeklyPlanRepository(db)
     plan_repo = MonthlyPlanRepository(db)
     recipe_repo = RecipeRepository(db)
@@ -526,8 +549,17 @@ async def generate_grocery(
             ),
         )
     else:
-        # Letzten Monatsplan des Haushalts verwenden
-        latest = await plan_repo.get_latest_for_household(household_id)
+        requested_plan_id = None
+        if body is not None:
+            requested_plan_id = body.plan_id or body.monthly_plan_id
+
+        if requested_plan_id:
+            # Gezielt angeforderter Plan — nie still auf einen anderen ausweichen.
+            latest = await plan_repo.get(requested_plan_id)
+            latest = await require_plan_owner(db, user_id, latest)
+        else:
+            # Letzten Monatsplan des Haushalts verwenden
+            latest = await plan_repo.get_latest_for_household(household_id)
         if not latest:
             raise HTTPException(status_code=400, detail="No plans found – generate a plan first")
 
@@ -612,6 +644,7 @@ async def generate_grocery(
     ]
     return {
         "grocery_list_id": str(grocery.id),
+        "monthly_plan_id": str(grocery.monthly_plan_id) if grocery.monthly_plan_id else None,
         "week_number": grocery.week_number,
         "is_master_list": grocery.is_master_list,
         "segment_label": getattr(grocery, "segment_label", None),
