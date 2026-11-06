@@ -225,25 +225,19 @@ export default function DatenschutzPage() {
         dadurch gehen lediglich abgehakte Positionen und die Anmeldung verloren.
       </p>
 
-      <h2 className="text-xl font-bold mt-6 mb-3">10. Schriftarten (Google Fonts)</h2>
+      <h2 className="text-xl font-bold mt-6 mb-3">10. Schriftarten</h2>
       <p>
-        Zur einheitlichen Darstellung laden wir die Schriftarten „Nunito“ und
-        „Fraunces“ über die Server von Google (
-        <code>fonts.googleapis.com</code>, <code>fonts.gstatic.com</code>).
-        Dabei wird Ihre IP-Adresse an Google übermittelt; Cookies werden dabei
-        nicht gesetzt.
+        Die Schriftarten „Nunito“ und „Fraunces“ werden <strong>von unseren
+        eigenen Servern</strong> ausgeliefert. Beim Aufruf unserer Seiten wird
+        keine Verbindung zu Google oder einem anderen Schriftarten-Dienst
+        aufgebaut; es werden dabei keine Daten an Dritte übermittelt.
       </p>
       <p className="mt-2">
-        Anbieter ist die Google Ireland Limited, Gordon House, Barrow Street,
-        Dublin 4, Irland; eine Übermittlung an die Google LLC in die USA ist
-        möglich. Google ist unter dem EU-US Data Privacy Framework zertifiziert.
-        Rechtsgrundlage ist unser berechtigtes Interesse an einer
-        einheitlichen und performanten Darstellung (Art. 6 Abs. 1 lit. f DSGVO).
-      </p>
-      <p className="mt-2">
-        Wir arbeiten an der lokalen Auslieferung der Schriftarten, damit keine
-        Verbindung zu Google mehr aufgebaut wird. Sobald das umgesetzt ist,
-        entfällt dieser Abschnitt.
+        Die Dateien liegen als Webfonts auf demselben Server wie die Website.
+        Rechtsgrundlage für die lokale Auslieferung ist unser berechtigtes
+        Interesse an einer einheitlichen und performanten Darstellung
+        (Art. 6 Abs. 1 lit. f DSGVO); personenbezogene Daten werden dabei
+        nicht zusätzlich verarbeitet.
       </p>
 
       <h2 className="text-xl font-bold mt-6 mb-3">11. E-Mail-Versand</h2>

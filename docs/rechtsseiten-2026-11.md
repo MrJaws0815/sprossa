@@ -1,6 +1,10 @@
 # Rechtsseiten Sprossa – Überarbeitung November 2026
 
 **Status:** Entwurf, nicht deployt. Änderungen nur im Repository.
+**Nachtrag 06.11.:** Die technischen Lücken 1 (Google Fonts), 2 (JWT-Secret),
+5 (Cookie `secure`) und 8 (AGB-Zustimmung bei Registrierung) sind behoben —
+siehe Abschnitt 8. Offen bleiben Löschjob für Pageviews, Löschkonzept und der
+Widerruf der Art.-9-Einwilligung.
 **Grundlage:** Ausschließlich der tatsächliche Code in `/home/mrjaws/monatsmenue` (Stand Commit `0a2beef` + Arbeitsstand).
 
 > **Wichtig:** Dies ist ein KI-generierter Entwurf. Er ersetzt **keine juristische Prüfung**. Vor dem Livegang – spätestens vor dem Start der kostenpflichtigen Version – muss eine Anwältin/ein Anwalt für IT- und Verbraucherrecht die Texte prüfen. Die folgenden Abschnitte benennen die Stellen, die dabei zuerst anzusehen sind.
@@ -118,3 +122,22 @@ Zusätzlich prüfen: **Impressum ohne Telefonnummer** (§ 5 DDG, geringes Risiko
 - `docs/rechtsseiten-2026-11.md` – dieser Bericht
 
 **Geprüft:** `npx tsc --noEmit` ohne Fehler; `LANDING_BUILD=1 npx next build` erfolgreich, alle drei Seiten statisch prerendert. Kein Deployment, kein Push.
+
+---
+
+## 8. Nachtrag 06.11.2026 — behobene technische Lücken
+
+| Lücke aus Abschnitt 5 | Umsetzung |
+|---|---|
+| 1 · Google Fonts dynamisch | Fraunces und Nunito liegen als 14 woff2-Dateien unter `frontend/public/fonts`, eingebunden per `@font-face` in `globals.css`. Der `<link>` auf `fonts.googleapis.com` ist entfernt. Live geprüft: 0 Google-Requests im HTML. Datenschutz Abschnitt 10 beschreibt jetzt die lokale Auslieferung. |
+| 2 · JWT mit Default-Secret | `core/auth.py` liest `MM_SECRET_KEY` aus der Umgebung; fehlt es, wird ein zufälliges Secret erzeugt und gewarnt. Kein weltweit bekanntes Secret mehr. |
+| 5 · Cookie ohne `Secure` | Neues Setting `MM_COOKIE_SECURE` (Default `True`), gesetzt in `core/config.py`, verwendet an allen drei `set_cookie`-Stellen. Test-Instanz läuft über HTTP und setzt es in `docker-compose.test.yml` auf `false`. Live geprüft: `HttpOnly; SameSite=lax`, ohne `Secure` im Test. |
+| 8 · Keine AGB-Zustimmung | Pflicht-Checkbox auf `/register` mit Links auf AGB und Datenschutz; `accepted_terms` im Request (ohne → 422); serverseitiger Zeitstempel `users.terms_accepted_at` (Migration `a1b2c3d4e5f6`). |
+
+**Weiterhin offen:** Löschjob für Pageview-Daten (Abschnitt 5.2), schriftliches
+Löschkonzept (5.3), Löschung der Allergien beim Widerruf nach Art. 9 (5.4),
+Hashing des Reset-Tokens (5.9).
+
+**Nicht durch Code behebbar:** die juristische Prüfung selbst sowie die zehn
+Bestätigungen aus Abschnitt 4 (Rechtsform, Serverstandort, AVV Strato,
+Logfile-Fristen, Mindestalter, Preismodell).
