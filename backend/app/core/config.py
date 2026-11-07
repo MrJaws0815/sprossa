@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Cookies nur ueber HTTPS senden. In der Test-Instanz laeuft HTTP,
     # dort wird MM_COOKIE_SECURE=false gesetzt.
     cookie_secure: bool = True
+    # Aufbewahrung der Pageview-Daten. Die Datenschutzerklaerung nennt 90 Tage;
+    # app/jobs/purge_pageviews.py setzt das technisch durch.
+    pageview_retention_days: int = 90
 
     # Stripe
     stripe_api_key: Optional[str] = None
