@@ -187,7 +187,20 @@ export default function RecipesPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {recipes.length > 0 ? recipes.slice(0, visibleCount).map((r) => (
           <Link key={r.id} href={`/dashboard/recipes/${r.id}`}
-            className="group block rounded-xl border border-sprossa-ink/10 bg-white p-4 transition-all hover:shadow-md hover:border-sprossa-green/40 hover:-translate-y-0.5">
+            className="group block overflow-hidden rounded-xl border border-sprossa-ink/10 bg-white transition-all hover:shadow-md hover:border-sprossa-green/40 hover:-translate-y-0.5">
+            {r.image_url ? (
+              <img
+                src={r.image_url}
+                alt={r.title}
+                loading="lazy"
+                className="h-40 w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-40 w-full items-center justify-center bg-sprossa-sage text-4xl" aria-hidden="true">
+                🍲
+              </div>
+            )}
+            <div className="p-4">
             <div className="mb-2 flex items-center justify-between">
               <h3 className="font-semibold text-lg text-sprossa-ink group-hover:text-sprossa-green">{r.title}</h3>
               {r.cook_once_eat_twice && <span className="rounded bg-sprossa-sage px-2 py-0.5 text-xs text-sprossa-dark">⟲ Cook Once</span>}
@@ -202,6 +215,7 @@ export default function RecipesPage() {
             <div className="flex flex-wrap gap-1">{(r.tags || []).map((t: string) => (
               <span key={t} className="rounded bg-sprossa-sage px-2 py-0.5 text-xs text-sprossa-dark">{t}</span>
             ))}</div>
+            </div>
           </Link>
         )) : (
           <div className="col-span-full rounded-xl border border-sprossa-ink/10 bg-white p-8 text-center">

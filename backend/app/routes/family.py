@@ -127,6 +127,7 @@ async def create_recipe(
     return RecipeOut(
         id=recipe.id, title=recipe.title,
         description=recipe.description,
+        image_url=recipe.image_url,
         servings=recipe.servings,
         prep_time_minutes=recipe.prep_time_minutes,
         cook_time_minutes=recipe.cook_time_minutes,
@@ -167,6 +168,7 @@ async def list_recipes(
         RecipeOut(
             id=r.id, title=r.title,
             description=r.description,
+            image_url=r.image_url,
             servings=r.servings,
             prep_time_minutes=r.prep_time_minutes,
             cook_time_minutes=r.cook_time_minutes,
@@ -196,6 +198,7 @@ async def get_recipe(
     return RecipeOut(
         id=recipe.id, title=recipe.title,
         description=recipe.description,
+        image_url=recipe.image_url,
         servings=scaled_servings,
         prep_time_minutes=recipe.prep_time_minutes,
         cook_time_minutes=recipe.cook_time_minutes,

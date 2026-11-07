@@ -92,6 +92,14 @@ export default function RecipeDetailPage() {
     <section className="mx-auto max-w-[820px] py-8">
       <div className="mb-4"><Link href="/dashboard/recipes" className="text-sprossa-green text-sm hover:underline">← Alle Rezepte</Link></div>
 
+      {recipe.image_url && (
+        <img
+          src={recipe.image_url as string}
+          alt={recipe.title}
+          className="mb-6 h-64 w-full rounded-2xl object-cover"
+        />
+      )}
+
       {/* Header */}
       <div className="mb-6">
         <div className="flex flex-wrap items-center gap-3 mb-2">

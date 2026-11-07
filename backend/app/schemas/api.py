@@ -156,6 +156,7 @@ class RecipeOut(BaseModel):
     id: UUID
     title: str
     description: Optional[str] = None
+    image_url: Optional[str] = None
     servings: float
     prep_time_minutes: Optional[int] = None
     cook_time_minutes: Optional[int] = None
