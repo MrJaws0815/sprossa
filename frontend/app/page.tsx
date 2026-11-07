@@ -402,6 +402,9 @@ export default function HomePage() {
               <a href="/agb" className="font-bold text-sprossa-dark no-underline hover:underline">
                 AGB
               </a>
+              <a href="/bildnachweis" className="font-bold text-sprossa-dark no-underline hover:underline">
+                Bildnachweis
+              </a>
             </nav>
           </footer>
         </section>

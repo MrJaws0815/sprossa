@@ -58,7 +58,7 @@ cp .next-build/server/app/index.html "$OUT/index.html"
 cp -r .next-build/static/. "$OUT/_next/static/"
 
 # Rechtsseiten als eigene Routen mit ausliefern (/impressum/, /datenschutz/, /agb/)
-for page in impressum datenschutz agb; do
+for page in impressum datenschutz agb bildnachweis; do
   if [ -f ".next-build/server/app/$page.html" ]; then
     mkdir -p "$OUT/$page"
     cp ".next-build/server/app/$page.html" "$OUT/$page/index.html"
