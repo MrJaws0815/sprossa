@@ -1,4 +1,5 @@
 """Household + Member API-Routen (Postgres-persistent)."""
+import logging
 from datetime import datetime, UTC
 from uuid import UUID
 from typing import Optional
@@ -16,6 +17,7 @@ from app.schemas.api import HouseholdCreate, HouseholdOut, HouseholdUpdate, Memb
 # Kein router-level dependency: sync-Dep vor async DB-Writes verursacht MissingGreenlet.
 # Jede Route deklariert get_current_user_id selbst.
 router = APIRouter(tags=["households"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/households", response_model=HouseholdOut, status_code=201)
@@ -61,10 +63,19 @@ async def update_household(
     if body.health_data_consent is True and household.health_data_consent_at is None:
         updates["health_data_consent_at"] = datetime.now(UTC)
     if body.health_data_consent_revoked is True:
-        # Nachweis der Einwilligung bleibt erhalten; Widerruf wird im Profil dokumentiert.
+        # Widerruf nach Art. 7 Abs. 3 DSGVO: Die Einwilligung entfällt, damit
+        # auch die Rechtsgrundlage für die Verarbeitung der Gesundheitsdaten.
+        # Der Nachweis des Widerrufs bleibt, die Daten selbst müssen weg.
         dp = dict(household.dietary_profile or {})
         dp["health_data_consent_revoked_at"] = datetime.now(UTC).isoformat()
+        dp.pop("allergies", None)
         updates["dietary_profile"] = dp
+        # Allergien aller Mitglieder tatsächlich löschen. Vorher wurde nur
+        # ein Zeitstempel gesetzt - die Allergien blieben gespeichert, obwohl
+        # die Datenschutzerklärung Löschung zusagt.
+        geloescht = await MemberRepository(db).clear_allergies(hid)
+        if geloescht:
+            logger.info("Widerruf Art. 9: Allergien von %s Mitgliedern gelöscht", geloescht)
 
     if updates:
         updated = await repo.update(hid, **updates)

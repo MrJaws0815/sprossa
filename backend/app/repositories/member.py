@@ -24,3 +24,20 @@ class MemberRepository(BaseRepository[Member]):
             self.model_class.household_id == household_id,
             self.model_class.is_active.is_(True),
         )
+
+    async def clear_allergies(self, household_id: object) -> int:
+        """Löscht die Allergien aller Mitglieder eines Haushalts.
+
+        Wird beim Widerruf der Einwilligung nach Art. 9 DSGVO aufgerufen.
+        Allergien sind Gesundheitsdaten; nach dem Widerruf dürfen sie nicht
+        weiter gespeichert werden (Art. 7 Abs. 3 DSGVO). Ein bloßer
+        Zeitstempel im Profil genügt dafür nicht.
+        """
+        members = await self.get_by_household(household_id)
+        betroffen = 0
+        for member in members:
+            if member.allergies:
+                member.allergies = []
+                betroffen += 1
+        await self.session.flush()
+        return betroffen
