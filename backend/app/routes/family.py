@@ -521,7 +521,8 @@ class GroceryGenerateRequest(BaseModel):
     monthly_plan_id: Optional[UUID] = None
 
 
-@router.post("/grocery/generate", status_code=201)
+@router.post("/grocery-lists/generate", status_code=201)
+@router.post("/grocery/generate", status_code=201, include_in_schema=False)
 async def generate_grocery(
     body: Optional[GroceryGenerateRequest] = Body(default=None),
     weekly_plan_id: Optional[UUID] = Query(None),

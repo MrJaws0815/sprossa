@@ -86,7 +86,7 @@ export default function GroceryPage() {
         await selectList(data[0].id);
       } else {
         // Automatisch generieren wenn leer
-        await fetch(`${getApiBase()}/grocery/generate`, { method: "POST", headers: authHeaders() });
+        await fetch(`${getApiBase()}/grocery-lists/generate`, { method: "POST", headers: authHeaders() });
         const r2 = await fetch(`${getApiBase()}/grocery-lists`, { headers: authHeaders() });
         if (r2.ok) {
           const d2 = await r2.json();
@@ -131,7 +131,7 @@ export default function GroceryPage() {
   async function generateGrocery() {
     setError("");
     try {
-      await fetch(`${getApiBase()}/grocery/generate`, { method: "POST", headers: authHeaders() });
+      await fetch(`${getApiBase()}/grocery-lists/generate`, { method: "POST", headers: authHeaders() });
       await loadGrocery();
     } catch (e: any) {
       setError(e.message || "Fehler beim Generieren der Liste");
