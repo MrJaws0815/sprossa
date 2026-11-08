@@ -264,7 +264,10 @@ export default function PlanPage() {
       )}
       {weeks.length > selectedWeek && weeks[selectedWeek] && (
         <div className="rounded-xl border border-sprossa-ink/10 bg-white p-4">
-          {(weeks[selectedWeek].meal_slots||[]).map((s:any) => {
+          {(weeks[selectedWeek].meal_slots||[])
+            .slice()
+            .sort((a: any, b: any) => a.day_of_week - b.day_of_week)
+            .map((s:any) => {
             const scaled = scaledServingsLabel(s);
             return (
               <div key={s.id} className="flex justify-between items-center border-b border-sprossa-ink/10 py-2">

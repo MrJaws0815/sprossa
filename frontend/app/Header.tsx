@@ -46,12 +46,20 @@ export default function SprossaHeader() {
                 Zum Dashboard
               </Link>
             ) : (
-              <Link
-                href="/#early-access"
-                className="font-bold text-sm text-sprossa-green no-underline"
-              >
-                Early Access
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  className="font-bold text-sm text-sprossa-ink no-underline hover:text-sprossa-green"
+                >
+                  Anmelden
+                </Link>
+                <Link
+                  href="/#early-access"
+                  className="font-bold text-sm text-sprossa-green no-underline"
+                >
+                  Early Access
+                </Link>
+              </>
             )}
           </div>
         </nav>

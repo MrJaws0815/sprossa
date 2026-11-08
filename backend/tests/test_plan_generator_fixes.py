@@ -188,18 +188,27 @@ def test_portion_multiplier_ohne_servings_ist_1():
 
 
 def test_repeat_slot_hat_gleichen_multiplier():
-    recipe = _recipe("CookOnce", [], servings=2, cook_once=True)
+    """Repeat-Slots erben den Multiplier des Original-Slots.
+
+    Braucht mehr als ein Rezept: Mit nur einem einzigen Gericht belegt jeder
+    Tag bereits dasselbe Rezept, ein Repeat waere bedeutungslos.
+    """
+    cook = _recipe("CookOnce", [], servings=2, cook_once=True)
+    others = [_recipe(f"Gericht {i}", []) for i in range(8)]
+    alle = [cook] + others
     slots = generate_balanced_weekly_slots(
         week_number=1,
         start_date=date(2026, 10, 1),
-        available_recipes=[recipe],
-        cook_once_ids=[recipe.id],
-        recipe_map={recipe.id: recipe},
+        available_recipes=alle,
+        cook_once_ids=[cook.id],
+        recipe_map={r.id: r for r in alle},
         total_portions=1.0,
+        cook_once_count=1,
     )
     repeat_slots = [s for s in slots if s["is_repeat"]]
-    assert repeat_slots, "CookOnce-Rezept muss Repeat-Slots erzeugen"
-    for slot in slots:
+    assert repeat_slots, "CookOnce-Rezept muss einen Repeat-Slot erzeugen"
+    for slot in repeat_slots:
+        assert slot["recipe_id"] == cook.id
         assert slot["servings_multiplier"] == pytest.approx(0.5)
 
 

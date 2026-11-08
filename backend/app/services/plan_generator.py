@@ -692,6 +692,8 @@ def generate_weekly_plan_skeleton(
     used_recipes = set()
     slots = []
 
+    cook_once_days: list[tuple[int, UUID]] = []
+
     for day in range(1, 8):  # 1=Monday .. 7=Sunday
         dinner_id = _pick_recipe(recipe_ids, used_recipes)
         used_recipes.add(dinner_id)
@@ -704,18 +706,25 @@ def generate_weekly_plan_skeleton(
             "is_repeat": False,
         }
         slots.append(slot)
-
-        # CookOnce-EatTwice: zweite Belegung an Tag+2
         if dinner_id in cook_once:
-            repeat_day = day + 2
-            if repeat_day <= 7:
-                slots.append({
-                    "day_of_week": repeat_day,
-                    "meal_type": "dinner",
-                    "recipe_id": dinner_id,
-                    "servings_multiplier": 1.0,
-                    "is_repeat": True,
-                })
+            cook_once_days.append((day, dinner_id))
+
+    # CookOnce-EatTwice: an Tag+2 werden die Reste gegessen - der regulaere
+    # Slot dort entfaellt. Frueher wurde der Repeat-Slot zusaetzlich
+    # angehaengt, wodurch ein Tag zwei Abendessen hatte.
+    by_day = {s["day_of_week"]: s for s in slots}
+    cook_once_day_numbers = {d for d, _ in cook_once_days}
+    for day, dinner_id in cook_once_days:
+        repeat_day = day + 2
+        if repeat_day <= 7 and repeat_day not in cook_once_day_numbers:
+            by_day[repeat_day] = {
+                "day_of_week": repeat_day,
+                "meal_type": "dinner",
+                "recipe_id": dinner_id,
+                "servings_multiplier": 1.0,
+                "is_repeat": True,
+            }
+    slots = [by_day[d] for d in sorted(by_day)]
 
     return {
         "week_number": week_number,
@@ -810,6 +819,7 @@ def generate_balanced_weekly_slots(
     used_ids: set[UUID] = set()
     category_counter: dict[str, int] = {}
     slots: list[dict] = []
+    cook_once_days: list[tuple[int, UUID, float]] = []
 
     shuffled = _shuffle_for_week(
         available_recipes, week_number, start_date, previous_week_ids
@@ -872,20 +882,26 @@ def generate_balanced_weekly_slots(
             "is_repeat": False,
         }
         slots.append(slot)
-
-        # CookOnce-EatTwice: zweite Belegung an Tag+2 – nur wenn aktiviert.
         if cook_once_enabled and pick.id in cook_once_ids:
-            repeat_day = day + 2
-            if repeat_day <= 7:
-                slots.append({
-                    "day_of_week": repeat_day,
-                    "meal_type": "dinner",
-                    "recipe_id": pick.id,
-                    "servings_multiplier": multiplier,
-                    "is_repeat": True,
-                })
+            cook_once_days.append((day, pick.id, multiplier))
 
-    return slots
+    # CookOnce-EatTwice: an Tag+2 werden die Reste gegessen - der regulaere
+    # Slot dort entfaellt. Frueher wurde der Repeat-Slot zusaetzlich
+    # angehaengt, wodurch ein Tag zwei Abendessen hatte.
+    by_day = {s["day_of_week"]: s for s in slots}
+    cook_once_day_numbers = {d for d, _, _ in cook_once_days}
+    for day, rid, mult in cook_once_days:
+        repeat_day = day + 2
+        if repeat_day <= 7 and repeat_day not in cook_once_day_numbers:
+            by_day[repeat_day] = {
+                "day_of_week": repeat_day,
+                "meal_type": "dinner",
+                "recipe_id": rid,
+                "servings_multiplier": mult,
+                "is_repeat": True,
+            }
+
+    return [by_day[d] for d in sorted(by_day)]
 
 
 # ─── Aggregierte Generierung mit DB-Persistenz ──────────────────────────

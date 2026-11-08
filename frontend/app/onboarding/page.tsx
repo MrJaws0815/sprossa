@@ -32,6 +32,7 @@ interface DietaryProfile {
   preferred_supermarket: Supermarket | null;
   monthly_budget_range: BudgetRange | null;
   shopping_frequency: ShoppingFrequency | null;
+  shopping_days: number[];
 }
 
 const DIET_LABELS: Record<DietType, string> = {
@@ -119,6 +120,9 @@ export default function OnboardingPage() {
   const [supermarket, setSupermarket] = useState<Supermarket | null>(null);
   const [budgetRange, setBudgetRange] = useState<BudgetRange | null>(null);
   const [shoppingFrequency, setShoppingFrequency] = useState<ShoppingFrequency | null>(null);
+  // Einkaufstage (1=Mo .. 7=So). Ohne Tage kann die Einkaufsliste nicht in
+  // Segmente geteilt werden - dann wirkt auch die Frequenz nicht.
+  const [shoppingDays, setShoppingDays] = useState<number[]>([]);
 
   // Step 4 – Time budget
   const [timeBudget, setTimeBudget] = useState<TimeBudget | null>(null);
@@ -188,6 +192,7 @@ export default function OnboardingPage() {
       preferred_supermarket: supermarket,
       monthly_budget_range: budgetRange,
       shopping_frequency: shoppingFrequency,
+      shopping_days: shoppingDays,
     };
     const res = await fetch(`${getApiBase()}/households/${hid}`, {
       method: "PUT",
@@ -696,6 +701,48 @@ export default function OnboardingPage() {
                 </label>
               ))}
             </div>
+
+            {shoppingFrequency && shoppingFrequency !== "nach_bedarf" && (
+              <div className="mt-7 rounded-xl border border-sprossa-ink/10 bg-white p-4">
+                <h3 className="mb-1 font-display text-lg font-semibold text-sprossa-ink">
+                  An welchen Tagen kauft ihr ein?
+                </h3>
+                <p className="mb-3 text-sm text-sprossa-muted">
+                  Die Einkaufsliste wird danach aufgeteilt – ein Einkauf, ein
+                  Einkaufstag. Ohne Tage bleibt es eine Liste für den ganzen Monat.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map((label, i) => {
+                    const day = i + 1;
+                    const aktiv = shoppingDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() =>
+                          setShoppingDays((prev) =>
+                            prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort((a, b) => a - b)
+                          )
+                        }
+                        className={`rounded-full border-2 px-4 py-2 text-sm font-bold transition-all ${
+                          aktiv
+                            ? "border-sprossa-green bg-sprossa-green text-white"
+                            : "border-sprossa-muted/25 bg-white text-sprossa-ink"
+                        }`}
+                        aria-pressed={aktiv}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {shoppingFrequency === "1x_woche" && shoppingDays.length > 1 && (
+                  <p className="mt-2 text-sm text-sprossa-terracotta-ink">
+                    Ihr habt „1× pro Woche" gewählt – ein Tag genügt.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
