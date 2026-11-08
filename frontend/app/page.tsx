@@ -44,7 +44,7 @@ const WEEK = [
   ["Mo", "Linsen-Curry mit Kokos", "Cook once"],
   ["Di", "Curry-Reis-Bowl (Reste)", "Eat twice"],
   ["Mi", "Nudelauflauf mit Zucchini", "Schnell"],
-  ["Do", "Salmon-Bowl mit Süßkartoffel", "Cook once"],
+  ["Do", "Lachs-Bowl mit Süßkartoffel", "Cook once"],
   ["Fr", "Bowl-Reste mit Ei", "Eat twice"],
   ["Sa", "Pizza-Pfanne, Familien-Favorit", "Genuss"],
   ["So", "Kürbissuppe mit Brot", "Sonntag"],
@@ -133,11 +133,10 @@ export default function HomePage() {
               </span>
 
               <h1 className="mb-5 font-display text-[clamp(34px,5.2vw,56px)] font-semibold leading-[1.06] tracking-[-1px] text-balance text-sprossa-ink">
-                Euer Monat wächst.
+                Einmal geplant.
                 <br />
-                Wie{" "}
                 <span className="text-sprossa-green">
-                  ein Spross auf der Fensterbank.
+                  Ein Monat versorgt.
                 </span>
               </h1>
 
@@ -249,11 +248,11 @@ export default function HomePage() {
             {/* ═══ Wochenplan-Beispiel ═══ */}
             <div
               className="overflow-hidden rounded-[22px] border border-sprossa-ink/12 bg-white shadow-[0_18px_40px_rgba(38,48,43,.08)]"
-              aria-label="Beispiel: Wochenplan Woche 1"
+              aria-label="Beispiel: Wochenplan, Woche 1 von 4"
             >
               <div className="flex items-center justify-between gap-2.5 border-b border-sprossa-ink/12 px-[22px] py-[18px]">
                 <div className="text-[15px] font-extrabold text-sprossa-ink">
-                  Wochenplan · Woche 1
+                  Wochenplan · Woche 1 von 4
                 </div>
                 <div className="rounded-full bg-sprossa-sage px-2.5 py-1 text-[11px] font-extrabold whitespace-nowrap text-sprossa-dark">
                   2 Kinder · Flexitarisch
@@ -279,7 +278,7 @@ export default function HomePage() {
 
               <div className="flex items-center gap-2 bg-sprossa-sage px-[22px] py-3.5 text-[13px] font-bold leading-[1.4] text-sprossa-dark">
                 <IconCart />
-                Einkaufsliste fertig – nach Kategorien sortiert
+                Einkaufsliste fertig – nach dem Weg durch euren Supermarkt sortiert
               </div>
             </div>
           </section>
@@ -343,7 +342,7 @@ export default function HomePage() {
               {
                 num: "3",
                 title: "Einkaufsliste fertig",
-                desc: "Nach Kategorien sortiert, für einen entspannten Einkaufsgang.",
+                desc: "Sortiert nach dem Weg durch euren Supermarkt – Rewe, Aldi, Edeka oder Lidl. Ihr lauft einmal durch und habt alles.",
               },
             ].map(({ num, title, desc }, i, arr) => (
               <div key={num} className="relative pt-1.5">
@@ -391,7 +390,7 @@ export default function HomePage() {
 
           {/* ═══ Footer ═══ */}
           <footer className="mt-0 flex flex-col justify-between gap-3 border-t border-sprossa-ink/12 pt-6 pb-9 text-[13px] text-sprossa-muted-strong sm:flex-row sm:flex-wrap">
-            <span>Sprossa · euer Monat, klug geplant</span>
+            <span>Sprossa · einmal geplant, ein Monat versorgt</span>
             <nav className="flex flex-wrap gap-[18px]" aria-label="Rechtliches">
               <a href="/impressum" className="font-bold text-sprossa-dark no-underline hover:underline">
                 Impressum

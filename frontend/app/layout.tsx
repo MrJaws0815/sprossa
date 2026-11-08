@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     locale: "de_DE",
     url: SITE_URL,
     siteName: "Sprossa",
-    title: "Sprossa – Euer Monat. Einmal geplant.",
+    title: "Sprossa – Einmal geplant, ein Monat versorgt.",
     description: DESCRIPTION,
     images: [
       {
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sprossa – Euer Monat. Einmal geplant.",
+    title: "Sprossa – Einmal geplant, ein Monat versorgt.",
     description: DESCRIPTION,
     images: ["/og-image.png"],
   },

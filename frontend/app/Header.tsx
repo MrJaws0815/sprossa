@@ -32,7 +32,7 @@ export default function SprossaHeader() {
             </span>
             Sprossa
             <span className="ml-[6px] text-sm font-normal text-sprossa-muted">
-              · euer Monat, klug geplant
+              · einmal geplant, ein Monat versorgt
             </span>
           </Link>
 
