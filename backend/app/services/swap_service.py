@@ -72,8 +72,14 @@ def _slot_payload(slot: MealSlot, recipe: Recipe) -> dict:
 
 
 async def _load_all_recipes_with_ingredients(db: AsyncSession) -> list[Recipe]:
+    """Alle Rezepte, die als Ersatz in Frage kommen.
+
+    Beilagen ('side': Dip, Salat, Rotkohl) sind ausgeschlossen - sonst koennte
+    man sich per Tausch ein Rotkohl-Abendessen in den Plan holen.
+    """
     stmt = (
         select(Recipe)
+        .where(Recipe.recipe_role == "main")
         .options(
             selectinload(Recipe.ingredients).selectinload(RecipeIngredient.ingredient)
         )
