@@ -152,6 +152,16 @@ export default function AgbPage() {
         Haushaltsmitgliedern eintragen. Bei Kindern entscheiden die
         Erziehungsberechtigten.
       </p>
+      <p className="mt-2">
+        (5) <strong>Rezeptbilder:</strong> Die Fotos in der Anwendung sind
+        KI-generiert und dienen ausschließlich der Illustration. Sie zeigen ein
+        Gericht dieser Art, nicht zwingend das Ergebnis des jeweiligen Rezepts;
+        Anrichte, Portionsgröße und Details können abweichen. Maßgeblich sind
+        allein der Rezepttext mit Zutaten und Zubereitung. Einzelheiten nennt
+        der <a href="/bildnachweis" className="font-semibold text-sprossa-green underline">
+          Hinweis zu den Rezeptbildern
+        </a>.
+      </p>
 
       <h2 className="text-xl font-bold mt-6 mb-3">§ 7 Nutzungsrechte und Inhalte</h2>
       <p>
