@@ -961,6 +961,10 @@ async def generate_and_persist_monthly_plan(
     result = await db.execute(stmt)
     all_recipes = list(result.scalars().all())
 
+    # Beilagen (Dip, Salat, Rotkohl) sind keine vollstaendigen Mahlzeiten und
+    # haben im Abendplan nichts verloren. Nur 'main' kommt in die Auswahl.
+    all_recipes = [r for r in all_recipes if (getattr(r, "recipe_role", "main") or "main") == "main"]
+
     # Filter auf die im Config angegebenen Rezept-IDs (falls vorhanden).
     # Damit werden in Tests/Teilplänen nur die gewünschten Rezepte verwendet.
     if config.recipe_ids:

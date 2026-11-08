@@ -128,6 +128,9 @@ class Recipe(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
     household_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("households.id"), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
+    # 'main' = vollstaendige Mahlzeit, 'side' = Beilage/Dip/Salat. Nur 'main'
+    # darf im Monatsplan als Abendessen landen.
+    recipe_role: Mapped[str] = mapped_column(String(20), nullable=False, default="main", server_default="main")
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     servings: Mapped[int] = mapped_column(Integer, default=4)
     prep_time_minutes: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
